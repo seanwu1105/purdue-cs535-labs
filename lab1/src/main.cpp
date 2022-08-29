@@ -19,10 +19,6 @@ bbenes@purdue.edu
 #include "glm/gtc/matrix_transform.hpp"
 
 
-// Vertex array object and vertex buffer object indices 
-GLuint VAO, VBO;
-
-
 int CompileShaders() {
 	// Vertex Shader
 	const char* vsSrc = "#version 330 core\n"
@@ -132,6 +128,9 @@ int main()
 	gladLoadGL();
 	// Set the viewport
 	glViewport(0, 0, 800, 800);
+
+	// Vertex array object and vertex buffer object indices 
+	GLuint VAO, VBO;
 
 	// once the OpenGL context is done, build the scene and compile shaders
 	BuildScene(VBO, VAO);
