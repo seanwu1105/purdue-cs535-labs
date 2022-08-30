@@ -19,7 +19,8 @@ bbenes@purdue.edu
 #include "glm/gtc/matrix_transform.hpp"
 
 
-int CompileShaders() {
+GLuint compileShaders()
+{
 	// Vertex Shader
 	const char* vsSrc = "#version 330 core\n"
 		"layout (location = 0) in vec3 aPos;\n"
@@ -39,19 +40,19 @@ int CompileShaders() {
 		"}\n\0";
 
 	// Create VS object
-	GLuint vs = glCreateShader(GL_VERTEX_SHADER);
+	GLuint vs{ glCreateShader(GL_VERTEX_SHADER) };
 	// Attach VS src to the Vertex Shader Object
 	glShaderSource(vs, 1, &vsSrc, NULL);
 	// Compile the vs
 	glCompileShader(vs);
 
 	// The same for FS
-	GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
+	GLuint fs{ glCreateShader(GL_FRAGMENT_SHADER) };
 	glShaderSource(fs, 1, &fsSrc, NULL);
 	glCompileShader(fs);
 
 	// Get shader program object
-	GLuint shaderProg = glCreateProgram();
+	GLuint shaderProg{ glCreateProgram() };
 	// Attach both vs and fs
 	glAttachShader(shaderProg, vs);
 	glAttachShader(shaderProg, fs);
@@ -64,14 +65,15 @@ int CompileShaders() {
 	return shaderProg;
 }
 
-void BuildScene(GLuint& VBO, GLuint& VAO) { // return VBO and VAO values
+void buildScene(GLuint& VBO, GLuint& VAO) // return VBO and VAO values
+{
 	// Vertices coordinates
-	const float K = 0.5f;
-	glm::vec3 vertices[] =
+	const glm::mediump_float K{ 0.5f };
+	glm::vec3 vertices[]
 	{
-		glm::vec3(-K, -K, 0.0f),
-		glm::vec3(K, -K, 0.0f),
-		glm::vec3(0,  K, 0.0f)
+		glm::vec3{ -K, -K, 0.0f },
+		glm::vec3{ K, -K, 0.0f },
+		glm::vec3{ 0,  K, 0.0f }
 	};
 
 	// make VAO
@@ -87,7 +89,7 @@ void BuildScene(GLuint& VBO, GLuint& VAO) { // return VBO and VAO values
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	// Configure the attributes
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::mediump_float), (void*)0);
 	// Make it valid
 	glEnableVertexAttribArray(0);
 
@@ -113,7 +115,7 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// make OpenGL windo
-	GLFWwindow* window = glfwCreateWindow(800, 800, "Simple", NULL, NULL);
+	GLFWwindow* window{ glfwCreateWindow(800, 800, "Simple", NULL, NULL) };
 	// is all OK?
 	if (window == NULL)
 	{
@@ -130,31 +132,30 @@ int main()
 	glViewport(0, 0, 800, 800);
 
 	// Vertex array object and vertex buffer object indices 
-	GLuint VAO, VBO;
+	GLuint VAO0, VBO0;
 
 	// once the OpenGL context is done, build the scene and compile shaders
-	BuildScene(VBO, VAO);
-	int shaderProg = CompileShaders();
+	buildScene(VBO0, VAO0);
+	GLuint shaderProg0{ compileShaders() };
 
 	// Backg color
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 	// Use shader
-	glUseProgram(shaderProg);
+	glUseProgram(shaderProg0);
 	// Bind the VAO
-	glBindVertexArray(VAO);
+	glBindVertexArray(VAO0);
 	glPointSize(5);
 
 	// Initialize ImGUI
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	// ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImGui::StyleColorsDark();
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
 
-	bool drawTriangle = true;
-	float scale = 1.0f;
-	float color[4] = { 0.2f, 0.2f, 0.8f, 1.0f };
+	bool drawTriangle{ true };
+	float scale{ 1.0f };
+	glm::mediump_float color[4] { 0.2f, 0.2f, 0.8f, 1.0f };
 
 	glfwSetKeyCallback(window, KbdCallback); // set keyboard callback to quit
 
@@ -165,7 +166,7 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		// Draw the scene
-		// glDrawArrays(GL_TRIANGLES, 0, 3);
+		 glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		if (drawTriangle) {
 			glDrawArrays(GL_POINTS, 0, 3);
@@ -173,9 +174,9 @@ int main()
 		}
 
 		// Export variables to shader
-		glUseProgram(shaderProg);
-		glUniform1f(glGetUniformLocation(shaderProg, "scale"), scale);
-		glUniform4f(glGetUniformLocation(shaderProg, "color"), color[0], color[1], color[2], color[3]);
+		glUseProgram(shaderProg0);
+		glUniform1f(glGetUniformLocation(shaderProg0, "scale"), scale);
+		glUniform4f(glGetUniformLocation(shaderProg0, "color"), color[0], color[1], color[2], color[3]);
 
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -204,9 +205,9 @@ int main()
 	}
 
 	// Cleanup
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
-	glDeleteProgram(shaderProg);
+	glDeleteVertexArrays(1, &VAO0);
+	glDeleteBuffers(1, &VBO0);
+	glDeleteProgram(shaderProg0);
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	return 0;
