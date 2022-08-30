@@ -146,6 +146,21 @@ int main()
 	glBindVertexArray(VAO0);
 	glPointSize(5);
 
+	// Vertex array object and vertex buffer object indices 
+	GLuint VAO1, VBO1;
+
+	// once the OpenGL context is done, build the scene and compile shaders
+	buildScene(VBO1, VAO1);
+	GLuint shaderProg1{ compileShaders() };
+
+	// Backg color
+	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+	// Use shader
+	glUseProgram(shaderProg1);
+	// Bind the VAO
+	glBindVertexArray(VAO1);
+	glPointSize(5);
+
 	// Initialize ImGUI
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -153,9 +168,15 @@ int main()
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
 
-	bool drawTriangle{ true };
-	float scale{ 1.0f };
-	glm::mediump_float color[4] { 0.2f, 0.2f, 0.8f, 1.0f };
+	bool drawTriangle0{ true };
+	bool fillTriangle0{ false };
+	float scale0{ 1.0f };
+	glm::mediump_float color0[4]{ 0.2f, 0.2f, 0.8f, 1.0f };
+
+	bool drawTriangle1{ true };
+	bool fillTriangle1{ false };
+	float scale1{ 0.5f };
+	glm::mediump_float color1[4]{ 0.2f, 0.2f, 0.8f, 1.0f };
 
 	glfwSetKeyCallback(window, KbdCallback); // set keyboard callback to quit
 
@@ -165,18 +186,33 @@ int main()
 		// Clean the window
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		// Draw the scene
-		 glDrawArrays(GL_TRIANGLES, 0, 3);
+		glUseProgram(shaderProg0);
+		glBindVertexArray(VAO0);
 
-		if (drawTriangle) {
+		// Draw the scene
+		if (drawTriangle0) {
 			glDrawArrays(GL_POINTS, 0, 3);
 			glDrawArrays(GL_LINE_LOOP, 0, 3);
 		}
+		if (fillTriangle0) glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		// Export variables to shader
-		glUseProgram(shaderProg0);
-		glUniform1f(glGetUniformLocation(shaderProg0, "scale"), scale);
-		glUniform4f(glGetUniformLocation(shaderProg0, "color"), color[0], color[1], color[2], color[3]);
+		glUniform1f(glGetUniformLocation(shaderProg0, "scale"), scale0);
+		glUniform4f(glGetUniformLocation(shaderProg0, "color"), color0[0], color0[1], color0[2], color0[3]);
+
+		glUseProgram(shaderProg1);
+		glBindVertexArray(VAO1);
+
+		// Draw the scene
+		if (drawTriangle1) {
+			glDrawArrays(GL_POINTS, 0, 3);
+			glDrawArrays(GL_LINE_LOOP, 0, 3);
+		}
+		if (fillTriangle1) glDrawArrays(GL_TRIANGLES, 0, 3);
+
+		// Export variables to shader
+		glUniform1f(glGetUniformLocation(shaderProg1, "scale"), scale1);
+		glUniform4f(glGetUniformLocation(shaderProg1, "color"), color1[0], color1[1], color1[2], color1[3]);
 
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -187,11 +223,19 @@ int main()
 		// Text that appears in the window
 		ImGui::Text("Let there be OpenGL!");
 		// Checkbox that appears in the window
-		ImGui::Checkbox("Draw Triangle", &drawTriangle);
+		ImGui::Checkbox("Draw Triangle0", &drawTriangle0);
+		ImGui::Checkbox("Fill Triangle0", &fillTriangle0);
 		// Slider that appears in the window
-		ImGui::SliderFloat("Scale", &scale, 0.5f, 2.0f);
+		ImGui::SliderFloat("Scale0", &scale0, 0.5f, 2.0f);
 		// Fancy color editor that appears in the window
-		ImGui::ColorEdit4("Color", color);
+		ImGui::ColorEdit4("Color0", color0);
+		// Checkbox that appears in the window
+		ImGui::Checkbox("Draw Triangle1", &drawTriangle1);
+		ImGui::Checkbox("Fill Triangle1", &fillTriangle1);
+		// Slider that appears in the window
+		ImGui::SliderFloat("Scale1", &scale1, 0.5f, 2.0f);
+		// Fancy color editor that appears in the window
+		ImGui::ColorEdit4("Color1", color1);
 		// Ends the window
 		ImGui::End();
 
@@ -208,6 +252,9 @@ int main()
 	glDeleteVertexArrays(1, &VAO0);
 	glDeleteBuffers(1, &VBO0);
 	glDeleteProgram(shaderProg0);
+	glDeleteVertexArrays(1, &VAO1);
+	glDeleteBuffers(1, &VBO1);
+	glDeleteProgram(shaderProg1);
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	return 0;
