@@ -1,16 +1,9 @@
-// Based on http://www.glfw.org and on https://github.com/VictorGordan/opengl-tutorials 
-/*
-(C) Bedrich Benes 2022
-Purdue University
-bbenes@purdue.edu
-*/
+#include <iostream>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-
-#include <iostream>
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
@@ -18,9 +11,7 @@ bbenes@purdue.edu
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
-
-GLuint compileShaders()
-{
+GLuint compileShaders() {
 	// Vertex Shader
 	const char* vsSrc = "#version 330 core\n"
 		"layout (location = 0) in vec3 aPos;\n"
@@ -89,7 +80,8 @@ void buildScene(GLuint& VBO, GLuint& VAO) // return VBO and VAO values
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	// Configure the attributes
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(glm::mediump_float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+						  3 * sizeof(glm::mediump_float), (void*)0);
 	// Make it valid
 	glEnableVertexAttribArray(0);
 
@@ -99,36 +91,129 @@ void buildScene(GLuint& VBO, GLuint& VAO) // return VBO and VAO values
 }
 
 // Quit when ESC is released
-static void KbdCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) glfwSetWindowShouldClose(window, GLFW_TRUE);
+static void KbdCallback(GLFWwindow* window, int key, int scancode, int action,
+						int mods) {
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
+		glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
+GLFWwindow* initializeGl() {
+	if (!glfwInit()) return nullptr;
 
-int main()
-{
-	if (!glfwInit()) return -1;
-
-	// negotiate with OpenGL
+	// Negotiate with OpenGL
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	// make OpenGL windo
 	GLFWwindow* window{ glfwCreateWindow(800, 800, "Simple", NULL, NULL) };
-	// is all OK?
-	if (window == NULL)
-	{
+	if (window == NULL) {
 		std::cout << "Cannot open GLFW window" << std::endl;
 		glfwTerminate();
-		return -1;
+		return nullptr;
 	}
 	// Paste the window to the current context
 	glfwMakeContextCurrent(window);
 
-	// Load GLAD to configure OpenGL
 	gladLoadGL();
-	// Set the viewport
+	return window;
+}
+
+void initializeImGui(GLFWwindow* window) {
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 330");
+}
+
+void renderGl(GLuint shaderProg0, GLuint VAO0, bool drawTriangle0,
+			  bool fillTriangle0, float scale0, glm::mediump_float color0[],
+			  GLuint shaderProg1, GLuint VAO1, bool drawTriangle1,
+			  bool fillTriangle1, float scale1, glm::mediump_float color1[]) {
+	// Clean the window
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glUseProgram(shaderProg0);
+	glBindVertexArray(VAO0);
+
+	// Draw the scene
+	if (drawTriangle0) {
+		glDrawArrays(GL_POINTS, 0, 3);
+		glDrawArrays(GL_LINE_LOOP, 0, 3);
+	}
+	if (fillTriangle0) glDrawArrays(GL_TRIANGLES, 0, 3);
+
+	// Export variables to shader
+	glUniform1f(glGetUniformLocation(shaderProg0, "scale"), scale0);
+	glUniform4f(glGetUniformLocation(shaderProg0, "color"),
+				color0[0], color0[1], color0[2], color0[3]);
+
+	glUseProgram(shaderProg1);
+	glBindVertexArray(VAO1);
+
+	// Draw the scene
+	if (drawTriangle1) {
+		glDrawArrays(GL_POINTS, 0, 3);
+		glDrawArrays(GL_LINE_LOOP, 0, 3);
+	}
+	if (fillTriangle1) glDrawArrays(GL_TRIANGLES, 0, 3);
+
+	// Export variables to shader
+	glUniform1f(glGetUniformLocation(shaderProg1, "scale"), scale1);
+	glUniform4f(glGetUniformLocation(shaderProg1, "color"),
+				color1[0], color1[1], color1[2], color1[3]);
+}
+
+void renderGui(bool* drawTriangle0, bool* fillTriangle0, float* scale0,
+			   glm::mediump_float* color0, bool* drawTriangle1,
+			   bool* fillTriangle1, float* scale1,
+			   glm::mediump_float* color1) {
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+
+	// ImGUI window creation
+	ImGui::Begin("CS 535");
+	// Text that appears in the window
+	ImGui::Text("Let there be OpenGL!");
+	// Checkbox that appears in the window
+	ImGui::Checkbox("Draw Triangle0", drawTriangle0);
+	ImGui::Checkbox("Fill Triangle0", fillTriangle0);
+	// Slider that appears in the window
+	ImGui::SliderFloat("Scale0", scale0, 0.5f, 2.0f);
+	// Fancy color editor that appears in the window
+	ImGui::ColorEdit4("Color0", color0);
+	// Checkbox that appears in the window
+	ImGui::Checkbox("Draw Triangle1", drawTriangle1);
+	ImGui::Checkbox("Fill Triangle1", fillTriangle1);
+	// Slider that appears in the window
+	ImGui::SliderFloat("Scale1", scale1, 0.5f, 2.0f);
+	// Fancy color editor that appears in the window
+	ImGui::ColorEdit4("Color1", color1);
+	// Ends the window
+	ImGui::End();
+
+	// Renders the ImGUI elements
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void cleanup(GLFWwindow* window, GLuint shaderProg0, GLuint* VAO0,
+			 GLuint* VBO0, GLuint shaderProg1, GLuint* VAO1, GLuint* VBO1) {
+	glDeleteVertexArrays(1, VAO0);
+	glDeleteBuffers(1, VBO0);
+	glDeleteProgram(shaderProg0);
+	glDeleteVertexArrays(1, VAO1);
+	glDeleteBuffers(1, VBO1);
+	glDeleteProgram(shaderProg1);
+	glfwDestroyWindow(window);
+	glfwTerminate();
+}
+
+int main() {
+	GLFWwindow* window{ initializeGl() };
+	if (window == nullptr) return -1;
+
 	glViewport(0, 0, 800, 800);
 
 	// Vertex array object and vertex buffer object indices 
@@ -161,12 +246,7 @@ int main()
 	glBindVertexArray(VAO1);
 	glPointSize(5);
 
-	// Initialize ImGUI
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGui::StyleColorsDark();
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init("#version 330");
+	initializeImGui(window);
 
 	bool drawTriangle0{ true };
 	bool fillTriangle0{ false };
@@ -181,67 +261,13 @@ int main()
 	glfwSetKeyCallback(window, KbdCallback); // set keyboard callback to quit
 
 	// Main while loop
-	while (!glfwWindowShouldClose(window))
-	{
-		// Clean the window
-		glClear(GL_COLOR_BUFFER_BIT);
+	while (!glfwWindowShouldClose(window)) {
+		renderGl(shaderProg0, VAO0, drawTriangle0, fillTriangle0, scale0,
+				 color0, shaderProg1, VAO1, drawTriangle1, fillTriangle1,
+				 scale1, color1);
 
-		glUseProgram(shaderProg0);
-		glBindVertexArray(VAO0);
-
-		// Draw the scene
-		if (drawTriangle0) {
-			glDrawArrays(GL_POINTS, 0, 3);
-			glDrawArrays(GL_LINE_LOOP, 0, 3);
-		}
-		if (fillTriangle0) glDrawArrays(GL_TRIANGLES, 0, 3);
-
-		// Export variables to shader
-		glUniform1f(glGetUniformLocation(shaderProg0, "scale"), scale0);
-		glUniform4f(glGetUniformLocation(shaderProg0, "color"), color0[0], color0[1], color0[2], color0[3]);
-
-		glUseProgram(shaderProg1);
-		glBindVertexArray(VAO1);
-
-		// Draw the scene
-		if (drawTriangle1) {
-			glDrawArrays(GL_POINTS, 0, 3);
-			glDrawArrays(GL_LINE_LOOP, 0, 3);
-		}
-		if (fillTriangle1) glDrawArrays(GL_TRIANGLES, 0, 3);
-
-		// Export variables to shader
-		glUniform1f(glGetUniformLocation(shaderProg1, "scale"), scale1);
-		glUniform4f(glGetUniformLocation(shaderProg1, "color"), color1[0], color1[1], color1[2], color1[3]);
-
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-
-		// ImGUI window creation
-		ImGui::Begin("CS 535");
-		// Text that appears in the window
-		ImGui::Text("Let there be OpenGL!");
-		// Checkbox that appears in the window
-		ImGui::Checkbox("Draw Triangle0", &drawTriangle0);
-		ImGui::Checkbox("Fill Triangle0", &fillTriangle0);
-		// Slider that appears in the window
-		ImGui::SliderFloat("Scale0", &scale0, 0.5f, 2.0f);
-		// Fancy color editor that appears in the window
-		ImGui::ColorEdit4("Color0", color0);
-		// Checkbox that appears in the window
-		ImGui::Checkbox("Draw Triangle1", &drawTriangle1);
-		ImGui::Checkbox("Fill Triangle1", &fillTriangle1);
-		// Slider that appears in the window
-		ImGui::SliderFloat("Scale1", &scale1, 0.5f, 2.0f);
-		// Fancy color editor that appears in the window
-		ImGui::ColorEdit4("Color1", color1);
-		// Ends the window
-		ImGui::End();
-
-		// Renders the ImGUI elements
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		renderGui(&drawTriangle0, &fillTriangle0, &scale0, color0,
+				  &drawTriangle1, &fillTriangle1, &scale1, color1);
 		// Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);
 		// make sure events are served
@@ -249,13 +275,6 @@ int main()
 	}
 
 	// Cleanup
-	glDeleteVertexArrays(1, &VAO0);
-	glDeleteBuffers(1, &VBO0);
-	glDeleteProgram(shaderProg0);
-	glDeleteVertexArrays(1, &VAO1);
-	glDeleteBuffers(1, &VBO1);
-	glDeleteProgram(shaderProg1);
-	glfwDestroyWindow(window);
-	glfwTerminate();
+	cleanup(window, shaderProg0, &VAO0, &VBO0, shaderProg1, &VAO1, &VBO1);
 	return 0;
 }
