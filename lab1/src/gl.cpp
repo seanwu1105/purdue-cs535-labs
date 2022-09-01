@@ -1,3 +1,5 @@
+#include <array>
+
 #include "glm/glm.hpp"
 
 #include "gl.h"
@@ -37,23 +39,22 @@ void cleanupGl(GLFWwindow* const window,
 }
 
 void buildTriangleVertices(const GLuint& VAO, const GLuint& VBO) {
+    const GLint size{ 3 };
     const glm::mediump_float k{ 0.5f };
 
-    // TODO: Use std::array
-    glm::vec3 vertices[]
-    {
+    const std::array<glm::vec3, size> vertices{
         glm::vec3{ -k, -k, 0.0f },
         glm::vec3{ k, -k, 0.0f },
-        glm::vec3{ 0,  k, 0.0f }
+        glm::vec3{ 0,  k, 0.0f },
     };
 
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
+                 vertices.data(), GL_STATIC_DRAW);
 
-    // TODO: Use array.size()
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-                          3 * sizeof(glm::mediump_float), (void*)0);
+    glVertexAttribPointer(0, size, GL_FLOAT, GL_FALSE,
+                          sizeof(glm::vec3), (void*)0);
     glEnableVertexAttribArray(0);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
