@@ -1,4 +1,5 @@
 #include <iostream>
+#include <variant>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -10,6 +11,8 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+
+#include "gl.h"
 
 GLuint compileShaders() {
 	// Vertex Shader
@@ -96,28 +99,6 @@ static void KbdCallback(GLFWwindow* window, int key, int scancode, int action,
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
-
-GLFWwindow* initializeGl() {
-	if (!glfwInit()) return nullptr;
-
-	// Negotiate with OpenGL
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-	GLFWwindow* window{ glfwCreateWindow(800, 800, "Simple", NULL, NULL) };
-	if (window == NULL) {
-		std::cout << "Cannot open GLFW window" << std::endl;
-		glfwTerminate();
-		return nullptr;
-	}
-	// Paste the window to the current context
-	glfwMakeContextCurrent(window);
-
-	gladLoadGL();
-	return window;
-}
-
 void initializeImGui(GLFWwindow* window) {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -213,8 +194,16 @@ void cleanup(GLFWwindow* window, GLuint shaderProg0, GLuint* VAO0,
 }
 
 int main() {
-	GLFWwindow* window{ initializeGl() };
-	if (window == nullptr) return -1;
+	auto initializeGlResult{ initializeGl() };
+	if (std::holds_alternative<FailureResult>(initializeGlResult)) {
+		std::cout << std::get<FailureResult>(initializeGlResult).message
+			<< std::endl;
+		return -1;
+	}
+
+	auto window{
+		std::get<SuccessResult<GLFWwindow*>>(initializeGlResult).value
+	};
 
 	glViewport(0, 0, 800, 800);
 
