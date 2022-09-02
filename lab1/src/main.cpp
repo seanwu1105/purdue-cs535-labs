@@ -19,6 +19,7 @@
 struct Triangle {
     bool border;
     bool fill;
+    float pointSize;
     float scale;
     glm::mediump_float color[4]; // TODO: Use std::array
     // TODO: RenderObject renderObject;
@@ -62,24 +63,10 @@ int main() {
     glGenBuffers(size, VBOs.data());
 
     buildTriangleVertices(VAOs.at(0), VBOs.at(0));
-
-    // Backg color
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-    // Use shader
-    glUseProgram(shaderPrograms.at(0));
-    // Bind the VAO
-    glBindVertexArray(VAOs.at(0));
-    glPointSize(5);
-
     buildTriangleVertices(VAOs.at(1), VBOs.at(1));
 
     // Backg color
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-    // Use shader
-    glUseProgram(shaderPrograms.at(1));
-    // Bind the VAO
-    glBindVertexArray(VAOs.at(1));
-    glPointSize(5);
 
     initializeImGui(window);
 
@@ -87,12 +74,14 @@ int main() {
         Triangle{
             .border{ true },
             .fill{ false },
+            .pointSize { 5.0f },
             .scale{ 1.0f },
             .color{ 0.2f, 0.2f, 0.8f, 1.0f }
         },
         Triangle{
             .border{ true },
             .fill{ true },
+            .pointSize { 5.0f },
             .scale{ 0.5f },
             .color{ 0.2f, 0.2f, 0.8f, 1.0f }
         },
@@ -144,6 +133,7 @@ void renderGl(const std::span<const Triangle>& triangles,
         glUseProgram(shaderPrograms.at(idx));
         glBindVertexArray(VAOs.at(idx));
 
+        glPointSize(triangle.pointSize);
         if (triangle.border) {
             glDrawArrays(GL_POINTS, 0, 3);
             glDrawArrays(GL_LINE_LOOP, 0, 3);
@@ -174,6 +164,8 @@ void renderGui(const std::span<Triangle>& triangles) {
                         &triangle.border);
         ImGui::Checkbox(("Fill " + std::to_string(idx)).c_str(),
                         &triangle.fill);
+        ImGui::SliderFloat(("Point Size " + std::to_string(idx)).c_str(),
+                           &triangle.pointSize, 5.0f, 20.0f);
         ImGui::SliderFloat(("Scale " + std::to_string(idx)).c_str(),
                            &triangle.scale, 0.5f, 2.0f);
         ImGui::ColorEdit4(("Color " + std::to_string(idx)).c_str(),
