@@ -33,8 +33,9 @@ const std::variant<SuccessResult<GLFWwindow* const>, ErrorResult> initGl() {
 
 void cleanupGl(GLFWwindow* const window,
                const GLsizei& size,
-               const std::span<GLuint>& shaderPrograms,
-               const std::span<GLuint>& VAOs, const std::span<GLuint>& VBOs) {
+               const std::span<const GLuint>& shaderPrograms,
+               const std::span<GLuint>& VAOs,
+               const std::span<GLuint>& VBOs) {
     for (const auto& program : shaderPrograms)
         glDeleteProgram(program);
 
