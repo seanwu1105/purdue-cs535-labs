@@ -21,7 +21,7 @@ struct Triangle {
     bool fill;
     float pointSize;
     float scale;
-    glm::mediump_float color[4]; // TODO: Use std::array
+    std::array< glm::mediump_float, 4> color;
     // TODO: RenderObject renderObject;
 };
 
@@ -144,8 +144,8 @@ void renderGl(const std::span<const Triangle>& triangles,
         glUniform1f(glGetUniformLocation(shaderPrograms.at(idx), "scale"),
                     triangle.scale);
         glUniform4f(glGetUniformLocation(shaderPrograms.at(idx), "color"),
-                    triangle.color[0], triangle.color[1], triangle.color[2],
-                    triangle.color[3]);
+                    triangle.color.at(0), triangle.color.at(1),
+                    triangle.color.at(2), triangle.color.at(3));
 
         idx++;
     }
@@ -169,7 +169,7 @@ void renderGui(const std::span<Triangle>& triangles) {
         ImGui::SliderFloat(("Scale " + std::to_string(idx)).c_str(),
                            &triangle.scale, 0.5f, 2.0f);
         ImGui::ColorEdit4(("Color " + std::to_string(idx)).c_str(),
-                          triangle.color);
+                          triangle.color.data());
 
         ++idx;
     }
