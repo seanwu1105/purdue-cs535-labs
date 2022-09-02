@@ -1,10 +1,17 @@
 #include <array>
+#include <filesystem>
+#include <fstream>
+#include <sstream>
 
 #include "glm/glm.hpp"
 
 #include "gl.h"
 
-std::variant<SuccessResult<GLFWwindow* const>, ErrorResult> initGl() {
+const std::variant<SuccessResult<const std::string>, ErrorResult> readFile(
+    const std::string& filename
+);
+
+const std::variant<SuccessResult<GLFWwindow* const>, ErrorResult> initGl() {
     if (!glfwInit()) return ErrorResult{ "Fail to init glfw." };
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -42,7 +49,7 @@ void buildTriangleVertices(const GLuint& VAO, const GLuint& VBO) {
     const GLint size{ 3 };
     const glm::mediump_float k{ 0.5f };
 
-    const std::array<glm::vec3, size> vertices{
+    const std::array<const glm::vec3, size> vertices{
         glm::vec3{ -k, -k, 0.0f },
         glm::vec3{ k, -k, 0.0f },
         glm::vec3{ 0,  k, 0.0f },
@@ -59,4 +66,43 @@ void buildTriangleVertices(const GLuint& VAO, const GLuint& VBO) {
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+}
+
+const std::variant<SuccessResult<const GLuint>, ErrorResult> attachShader(
+    const GLuint& shaderProgram,
+    const std::string& shaderFilename,
+    const GLenum& shaderType
+) {
+    const auto readFileResult{ readFile(shaderFilename) };
+    if (std::holds_alternative<ErrorResult>(readFileResult))
+        return std::get<ErrorResult>(readFileResult);
+
+    const auto shaderSrc{
+        std::get<SuccessResult<const std::string>>(readFileResult).value.c_str()
+    };
+
+    const auto shader{ glCreateShader(shaderType) };
+    glShaderSource(shader, 1, &shaderSrc, nullptr);
+    glCompileShader(shader);
+
+    glAttachShader(shaderProgram, shader);
+    glLinkProgram(shaderProgram);
+
+    glDeleteShader(shader);
+
+    return SuccessResult<const GLuint>{shaderProgram};
+}
+
+const std::variant<SuccessResult<const std::string>, ErrorResult> readFile(
+    const std::string& filename
+) {
+    const auto sourcePath = std::filesystem::path("src");
+    std::ifstream shaderFile(sourcePath / filename);
+    if (!shaderFile.is_open()) return ErrorResult{
+        "Fail to open file: " + (sourcePath / filename).string()
+    };
+
+    std::stringstream buffer;
+    buffer << shaderFile.rdbuf();
+    return SuccessResult<const std::string>{ buffer.str() };
 }

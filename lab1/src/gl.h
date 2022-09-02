@@ -8,10 +8,16 @@
 
 #include "result.h"
 
-std::variant<SuccessResult<GLFWwindow* const>, ErrorResult> initGl();
+const std::variant<SuccessResult<GLFWwindow* const>, ErrorResult> initGl();
 
 void cleanupGl(GLFWwindow* const window, const GLsizei& size,
                const std::span<GLuint>& shaderPrograms,
                const std::span<GLuint>& VAOs, const std::span<GLuint>& VBOs);
 
 void buildTriangleVertices(const GLuint& VAO, const GLuint& VBO);
+
+const std::variant<SuccessResult<const GLuint>, ErrorResult> attachShader(
+    const GLuint& shaderProgram,
+    const std::string& shaderFilename,
+    const GLenum& shaderType
+);

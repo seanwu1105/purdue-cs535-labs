@@ -159,6 +159,10 @@
     <ClInclude Include="src\gl.h" />
     <ClInclude Include="src\result.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="src\triangle.frag" />
+    <None Include="src\triangle.vert" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

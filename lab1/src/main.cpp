@@ -1,4 +1,5 @@
 #include <array>
+#include <algorithm>
 #include <iostream>
 #include <variant>
 
@@ -15,57 +16,13 @@
 
 #include "gl.h"
 
-GLuint compileShaders() {
-    // Vertex Shader
-    const char* vsSrc = "#version 330 core\n"
-        "layout (location = 0) in vec3 aPos;\n"
-        "uniform float scale;\n"
-        "void main()\n"
-        "{\n"
-        "   gl_Position = vec4(scale* aPos.x, scale* aPos.y, scale* aPos.z, 1.0);\n"
-        "}\0";
-
-    // Fragment Shader
-    const char* fsSrc = "#version 330 core\n"
-        "out vec4 col;\n"
-        "uniform vec4 color;\n"
-        "void main()\n"
-        "{\n"
-        "   col = color;\n"
-        "}\n\0";
-
-    // Create VS object
-    GLuint vs{ glCreateShader(GL_VERTEX_SHADER) };
-    // Attach VS src to the Vertex Shader Object
-    glShaderSource(vs, 1, &vsSrc, NULL);
-    // Compile the vs
-    glCompileShader(vs);
-
-    // The same for FS
-    GLuint fs{ glCreateShader(GL_FRAGMENT_SHADER) };
-    glShaderSource(fs, 1, &fsSrc, NULL);
-    glCompileShader(fs);
-
-    // Get shader program object
-    GLuint shaderProg{ glCreateProgram() };
-    // Attach both vs and fs
-    glAttachShader(shaderProg, vs);
-    glAttachShader(shaderProg, fs);
-    // Link all
-    glLinkProgram(shaderProg);
-
-    // Clear the VS and FS objects
-    glDeleteShader(vs);
-    glDeleteShader(fs);
-    return shaderProg;
-}
-
 // Quit when ESC is released
 static void KbdCallback(GLFWwindow* window, int key, int scancode, int action,
                         int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
+
 void initializeImGui(GLFWwindow* window) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -162,7 +119,16 @@ int main() {
     glViewport(0, 0, 800, 800);
 
     const GLsizei size = 2;
-    std::array<GLuint, size> shaderPrograms{ compileShaders(), compileShaders() };
+
+    std::array<GLuint, size> shaderPrograms{};
+    std::transform(shaderPrograms.begin(), shaderPrograms.end(),
+                   shaderPrograms.begin(),
+                   [](GLuint) {return glCreateProgram(); });
+    for (const auto& program : shaderPrograms) {
+        attachShader(program, "triangle.vert", GL_VERTEX_SHADER);
+        attachShader(program, "triangle.frag", GL_FRAGMENT_SHADER);
+    }
+
     std::array<GLuint, size> VAOs{};
     std::array<GLuint, size> VBOs{};
 
