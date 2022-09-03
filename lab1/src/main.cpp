@@ -32,8 +32,8 @@ struct Triangle {
 template<size_t N>
 std::array<Triangle, N> initializeTriangles();
 void initializeImGui(GLFWwindow* window);
-void renderGl(const std::span<const Triangle>& triangles);
-void renderGui(const std::span<Triangle>& triangles);
+void renderGl(const std::span<const Triangle>& triangles, const bool& animate);
+void renderGui(const std::span<Triangle>& triangles, bool& animate);
 static void KbdCallback(GLFWwindow* window, int key, int scancode, int action,
                         int mods);
 
@@ -52,6 +52,7 @@ int main() {
 
     const GLsizei size{ 100 };
     auto triangles{ initializeTriangles<size>() };
+    bool animate{ true };
 
     // Set background color
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
@@ -61,8 +62,8 @@ int main() {
     glfwSetKeyCallback(window, KbdCallback);
 
     while (!glfwWindowShouldClose(window)) {
-        renderGl(triangles);
-        renderGui(triangles);
+        renderGl(triangles, animate);
+        renderGui(triangles, animate);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -85,13 +86,13 @@ std::array<Triangle, N> initializeTriangles() {
         [](const auto& idx) { return Triangle{
             .border{ true },
             .fill{ true },
-            .pointSize { 20.0f - (idx + 1)},
-            .scale{ 2.0f - (0.02f * idx) },
+            .pointSize { 20.0f / (idx + 1)},
+            .scale{ 3.25f - (0.0325f * idx) },
             .rotateDeg{std::fmod(5.0f * idx, 360.0f)},
             .color{
-                static_cast<float>(std::abs(std::sin(idx))),
-                static_cast<float>(std::abs(std::cos(idx + 0.5))),
-                static_cast<float>(std::abs(std::cos(idx))),
+                (float)(std::abs(std::sin(idx))),
+                (float)(std::abs(std::cos(idx + 0.5))),
+                (float)(std::abs(std::cos(idx))),
                 1.0f
             },
             .renderObject {.shaderProgram{ glCreateProgram() }}
@@ -128,7 +129,7 @@ void initializeImGui(GLFWwindow* window) {
     ImGui_ImplOpenGL3_Init("#version 330");
 }
 
-void renderGl(const std::span<const Triangle>& triangles) {
+void renderGl(const std::span<const Triangle>& triangles, const bool& animate) {
     glClear(GL_COLOR_BUFFER_BIT);
 
     for (const auto& triangle : triangles) {
@@ -144,9 +145,12 @@ void renderGl(const std::span<const Triangle>& triangles) {
         if (triangle.fill) glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glm::mat4 trans{ glm::mat4(1.0f) };
-        trans = glm::rotate(trans, glm::radians(triangle.rotateDeg), glm::vec3(
-            0.0, 0.0, 1.0
-        ));
+        const auto rotateDegOffset{ animate ? (float)glfwGetTime() : 0 };
+        trans = glm::rotate(
+            trans,
+            glm::radians(triangle.rotateDeg + rotateDegOffset),
+            glm::vec3(0.0, 0.0, 1.0)
+        );
         trans = glm::scale(trans, glm::vec3(
             triangle.scale, triangle.scale, triangle.scale
         ));
@@ -163,13 +167,14 @@ void renderGl(const std::span<const Triangle>& triangles) {
     }
 }
 
-void renderGui(const std::span<Triangle>& triangles) {
+void renderGui(const std::span<Triangle>& triangles, bool& animate) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
     ImGui::Begin("CS 535");
     ImGui::Text("Let there be OpenGL!");
+    ImGui::Checkbox("Animation", &animate);
 
     static size_t selectedIdx{ 0 };
     const auto comboPreview{ std::to_string(selectedIdx) };
@@ -190,7 +195,7 @@ void renderGui(const std::span<Triangle>& triangles) {
     ImGui::Checkbox("Fill", &triangles[selectedIdx].fill);
     ImGui::SliderFloat("Point Size", &triangles[selectedIdx].pointSize,
                        5.0f, 20.0f);
-    ImGui::SliderFloat("Scale", &triangles[selectedIdx].scale, 0.0f, 2.0f);
+    ImGui::SliderFloat("Scale", &triangles[selectedIdx].scale, 0.0f, 4.0f);
     ImGui::SliderFloat("Rotate", &triangles[selectedIdx].rotateDeg, 0.0f, 360.0f);
     ImGui::ColorEdit4("Color", triangles[selectedIdx].color.data());
     ImGui::End();
