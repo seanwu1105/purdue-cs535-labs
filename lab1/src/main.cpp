@@ -4,6 +4,7 @@
 #include <iostream>
 #include <numeric>
 #include <variant>
+#include <vector>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -89,7 +90,8 @@ std::array<Triangle, N> initializeTriangles() {
                 static_cast<glm::mediump_float>(std::abs(std::sin(idx))),
                 static_cast<glm::mediump_float>(std::abs(std::cos(idx + 0.5))),
                 static_cast<glm::mediump_float>(std::abs(std::cos(idx))),
-                1.0f},
+                1.0f
+            },
             .renderObject {.shaderProgram{ glCreateProgram() }}
         }; });
 
@@ -156,21 +158,28 @@ void renderGui(const std::span<Triangle>& triangles) {
 
     ImGui::Begin("CS 535");
     ImGui::Text("Let there be OpenGL!");
-    for (size_t idx = 0; auto & triangle : triangles) {
-        ImGui::Text(("Triangle " + std::to_string(idx)).c_str());
-        ImGui::Checkbox(("Border " + std::to_string(idx)).c_str(),
-                        &triangle.border);
-        ImGui::Checkbox(("Fill " + std::to_string(idx)).c_str(),
-                        &triangle.fill);
-        ImGui::SliderFloat(("Point Size " + std::to_string(idx)).c_str(),
-                           &triangle.pointSize, 5.0f, 20.0f);
-        ImGui::SliderFloat(("Scale " + std::to_string(idx)).c_str(),
-                           &triangle.scale, 0.5f, 2.0f);
-        ImGui::ColorEdit4(("Color " + std::to_string(idx)).c_str(),
-                          triangle.color.data());
 
-        ++idx;
+    static size_t selectedIdx{ 0 };
+    const auto comboPreview{ std::to_string(selectedIdx) };
+    if (ImGui::BeginCombo("Triangle Selection", comboPreview.c_str())) {
+        for (size_t idx{ 0 }; const auto & triangle : triangles) {
+            const bool isSelected{ selectedIdx == idx };
+            if (ImGui::Selectable(std::to_string(idx).c_str(), isSelected)) {
+                selectedIdx = idx;
+            }
+            if (isSelected) ImGui::SetItemDefaultFocus();
+
+            ++idx;
+        }
+        ImGui::EndCombo();
     }
+
+    ImGui::Checkbox("Border", &triangles[selectedIdx].border);
+    ImGui::Checkbox("Fill", &triangles[selectedIdx].fill);
+    ImGui::SliderFloat("Point Size", &triangles[selectedIdx].pointSize,
+                       5.0f, 20.0f);
+    ImGui::SliderFloat("Scale", &triangles[selectedIdx].scale, 0.0f, 2.0f);
+    ImGui::ColorEdit4("Color", triangles[selectedIdx].color.data());
     ImGui::End();
 
 
