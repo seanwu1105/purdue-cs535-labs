@@ -31,38 +31,29 @@ const std::variant<SuccessResult<GLFWwindow* const>, ErrorResult> initGl() {
     return SuccessResult<GLFWwindow* const>{ window };
 }
 
-void cleanupGl(GLFWwindow* const window,
-               const GLsizei& size,
-               const std::span<const GLuint>& shaderPrograms,
-               const std::span<GLuint>& VAOs,
-               const std::span<GLuint>& VBOs) {
-    for (const auto& program : shaderPrograms)
-        glDeleteProgram(program);
-
-    glDeleteVertexArrays(size, VAOs.data());
-    glDeleteBuffers(size, VBOs.data());
+void cleanupGl(
+    GLFWwindow* const window,
+    const std::span<const RenderObject>& renderObjects
+) {
+    for (const auto& renderObject : renderObjects) {
+        glDeleteProgram(renderObject.shaderProgram);
+        glDeleteVertexArrays(1, &renderObject.VAO);
+        glDeleteBuffers(1, &renderObject.VBO);
+    }
 
     glfwDestroyWindow(window);
     glfwTerminate();
 }
 
-void buildTriangleVertices(const GLuint& VAO, const GLuint& VBO) {
-    const GLint size{ 3 };
-    const glm::mediump_float k{ 0.5f };
-
-    const std::array<const glm::vec3, size> vertices{
-        glm::vec3{ -k, -k, 0.0f },
-        glm::vec3{ k, -k, 0.0f },
-        glm::vec3{ 0,  k, 0.0f },
-    };
-
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+void buildTriangleVertices(const RenderObject& renderObject,
+                           const std::array<const glm::vec3, 3>& vertices) {
+    glBindVertexArray(renderObject.VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, renderObject.VBO);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
                  vertices.data(), GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, size, GL_FLOAT, GL_FALSE,
-                          sizeof(glm::vec3), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT,
+                          GL_FALSE, sizeof(glm::vec3), (void*)0);
     glEnableVertexAttribArray(0);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);

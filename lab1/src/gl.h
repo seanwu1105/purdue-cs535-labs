@@ -16,12 +16,13 @@ struct RenderObject {
 
 const std::variant<SuccessResult<GLFWwindow* const>, ErrorResult> initGl();
 
-void cleanupGl(GLFWwindow* const window, const GLsizei& size,
-               const std::span<const GLuint>& shaderPrograms,
-               const std::span<GLuint>& VAOs,
-               const std::span<GLuint>& VBOs);
+void cleanupGl(
+    GLFWwindow* const window,
+    const std::span<const RenderObject>& renderObjects
+);
 
-void buildTriangleVertices(const GLuint& VAO, const GLuint& VBO);
+void buildTriangleVertices(const RenderObject& renderObject,
+                           const std::array<const glm::vec3, 3>& vertices);
 
 const std::variant<SuccessResult<const GLuint>, ErrorResult> attachShader(
     const GLuint& shaderProgram,

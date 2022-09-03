@@ -22,13 +22,11 @@ struct Triangle {
     float pointSize;
     float scale;
     std::array< glm::mediump_float, 4> color;
-    // TODO: RenderObject renderObject;
+    RenderObject renderObject;
 };
 
 void initializeImGui(GLFWwindow* window);
-void renderGl(const std::span<const Triangle>& triangles,
-              const std::array<GLuint, 2>& shaderPrograms,
-              const std::array<GLuint, 2>& VAOs);
+void renderGl(const std::span<const Triangle>& triangles);
 void renderGui(const std::span<Triangle>& triangles);
 static void KbdCallback(GLFWwindow* window, int key, int scancode, int action,
                         int mods);
@@ -47,61 +45,62 @@ int main() {
     glViewport(0, 0, 800, 800);
 
     const GLsizei size = 2;
-
-    std::array<GLuint, size> shaderPrograms{};
-    std::generate(shaderPrograms.begin(), shaderPrograms.end(),
-                  [] { return glCreateProgram(); });
-    for (const auto& program : shaderPrograms) {
-        attachShader(program, "triangle.vert", GL_VERTEX_SHADER);
-        attachShader(program, "triangle.frag", GL_FRAGMENT_SHADER);
-    }
-
-    std::array<GLuint, size> VAOs{};
-    std::array<GLuint, size> VBOs{};
-
-    glGenVertexArrays(size, VAOs.data());
-    glGenBuffers(size, VBOs.data());
-
-    buildTriangleVertices(VAOs.at(0), VBOs.at(0));
-    buildTriangleVertices(VAOs.at(1), VBOs.at(1));
-
-    // Backg color
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-
-    initializeImGui(window);
-
     std::array<Triangle, size> triangles{
         Triangle{
             .border{ true },
             .fill{ false },
             .pointSize { 5.0f },
             .scale{ 1.0f },
-            .color{ 0.2f, 0.2f, 0.8f, 1.0f }
+            .color{ 0.2f, 0.2f, 0.8f, 1.0f },
+            .renderObject {.shaderProgram{ glCreateProgram() }}
         },
         Triangle{
             .border{ true },
             .fill{ true },
             .pointSize { 5.0f },
             .scale{ 0.5f },
-            .color{ 0.2f, 0.2f, 0.8f, 1.0f }
+            .color{ 0.2f, 0.2f, 0.8f, 1.0f },
+            .renderObject {.shaderProgram{ glCreateProgram() }}
         },
     };
+    for (auto& triangle : triangles) {
+        attachShader(triangle.renderObject.shaderProgram,
+                     "triangle.vert", GL_VERTEX_SHADER);
+        attachShader(triangle.renderObject.shaderProgram,
+                     "triangle.frag", GL_FRAGMENT_SHADER);
+        glGenVertexArrays(1, &triangle.renderObject.VAO);
+        glGenBuffers(1, &triangle.renderObject.VBO);
 
-    glfwSetKeyCallback(window, KbdCallback); // set keyboard callback to quit
+        const GLint size{ 3 };
+        const glm::mediump_float k{ 0.5f };
 
-    // Main while loop
+        const std::array<const glm::vec3, size> vertices{
+            glm::vec3{ -k, -k, 0.0f },
+            glm::vec3{ k, -k, 0.0f },
+            glm::vec3{ 0,  k, 0.0f },
+        };
+        buildTriangleVertices(triangle.renderObject, vertices);
+    }
+
+    // Set background color
+    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+
+    initializeImGui(window);
+
+    glfwSetKeyCallback(window, KbdCallback);
+
     while (!glfwWindowShouldClose(window)) {
-        renderGl(triangles, shaderPrograms, VAOs);
-
+        renderGl(triangles);
         renderGui(triangles);
-        // Swap the back buffer with the front buffer
+
         glfwSwapBuffers(window);
-        // make sure events are served
         glfwPollEvents();
     }
 
-    // Cleanup
-    cleanupGl(window, size, shaderPrograms, VAOs, VBOs);
+    std::array<RenderObject, triangles.size()> renderObjects{};
+    std::transform(triangles.begin(), triangles.end(), renderObjects.begin(),
+                   [](const auto& triangle) { return triangle.renderObject; });
+    cleanupGl(window, renderObjects);
     return 0;
 }
 
@@ -123,15 +122,12 @@ void initializeImGui(GLFWwindow* window) {
     ImGui_ImplOpenGL3_Init("#version 330");
 }
 
-void renderGl(const std::span<const Triangle>& triangles,
-              const std::array<GLuint, 2>& shaderPrograms,
-              const std::array<GLuint, 2>& VAOs) {
-    // Clean the window
+void renderGl(const std::span<const Triangle>& triangles) {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    for (size_t idx = 0; const auto & triangle : triangles) {
-        glUseProgram(shaderPrograms.at(idx));
-        glBindVertexArray(VAOs.at(idx));
+    for (const auto& triangle : triangles) {
+        glUseProgram(triangle.renderObject.shaderProgram);
+        glBindVertexArray(triangle.renderObject.VAO);
 
         glPointSize(triangle.pointSize);
         if (triangle.border) {
@@ -141,13 +137,13 @@ void renderGl(const std::span<const Triangle>& triangles,
 
         if (triangle.fill) glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        glUniform1f(glGetUniformLocation(shaderPrograms.at(idx), "scale"),
+        glUniform1f(glGetUniformLocation(triangle.renderObject.shaderProgram,
+                                         "scale"),
                     triangle.scale);
-        glUniform4f(glGetUniformLocation(shaderPrograms.at(idx), "color"),
+        glUniform4f(glGetUniformLocation(triangle.renderObject.shaderProgram,
+                                         "color"),
                     triangle.color.at(0), triangle.color.at(1),
                     triangle.color.at(2), triangle.color.at(3));
-
-        idx++;
     }
 }
 
