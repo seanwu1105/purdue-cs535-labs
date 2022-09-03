@@ -1,6 +1,8 @@
 #include <array>
 #include <algorithm>
+#include <cmath>
 #include <iostream>
+#include <numeric>
 #include <variant>
 
 #include "imgui.h"
@@ -21,10 +23,12 @@ struct Triangle {
     bool fill;
     float pointSize;
     float scale;
-    std::array< glm::mediump_float, 4> color;
+    std::array<glm::mediump_float, 4> color;
     RenderObject renderObject;
 };
 
+template<size_t N>
+std::array<Triangle, N> initializeTriangles();
 void initializeImGui(GLFWwindow* window);
 void renderGl(const std::span<const Triangle>& triangles);
 void renderGui(const std::span<Triangle>& triangles);
@@ -44,43 +48,8 @@ int main() {
 
     glViewport(0, 0, 800, 800);
 
-    const GLsizei size = 2;
-    std::array<Triangle, size> triangles{
-        Triangle{
-            .border{ true },
-            .fill{ false },
-            .pointSize { 5.0f },
-            .scale{ 1.0f },
-            .color{ 0.2f, 0.2f, 0.8f, 1.0f },
-            .renderObject {.shaderProgram{ glCreateProgram() }}
-        },
-        Triangle{
-            .border{ true },
-            .fill{ true },
-            .pointSize { 5.0f },
-            .scale{ 0.5f },
-            .color{ 0.2f, 0.2f, 0.8f, 1.0f },
-            .renderObject {.shaderProgram{ glCreateProgram() }}
-        },
-    };
-    for (auto& triangle : triangles) {
-        attachShader(triangle.renderObject.shaderProgram,
-                     "triangle.vert", GL_VERTEX_SHADER);
-        attachShader(triangle.renderObject.shaderProgram,
-                     "triangle.frag", GL_FRAGMENT_SHADER);
-        glGenVertexArrays(1, &triangle.renderObject.VAO);
-        glGenBuffers(1, &triangle.renderObject.VBO);
-
-        const GLint size{ 3 };
-        const glm::mediump_float k{ 0.5f };
-
-        const std::array<const glm::vec3, size> vertices{
-            glm::vec3{ -k, -k, 0.0f },
-            glm::vec3{ k, -k, 0.0f },
-            glm::vec3{ 0,  k, 0.0f },
-        };
-        buildTriangleVertices(triangle.renderObject, vertices);
-    }
+    const GLsizei size{ 50 };
+    auto triangles{ initializeTriangles<size>() };
 
     // Set background color
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
@@ -104,12 +73,45 @@ int main() {
     return 0;
 }
 
+template<size_t N>
+std::array<Triangle, N> initializeTriangles() {
+    std::array<Triangle, N> triangles{};
+    std::array<int, N> indices{};
+    std::iota(indices.begin(), indices.end(), 0);
+    std::transform(
+        indices.begin(), indices.end(), triangles.begin(),
+        [](const auto& idx) { return Triangle{
+            .border{ true },
+            .fill{ false },
+            .pointSize { 20.0f / (idx + 1)},
+            .scale{ 2.0f / (idx + 1) },
+            .color{
+                static_cast<glm::mediump_float>(std::abs(std::sin(idx))),
+                static_cast<glm::mediump_float>(std::abs(std::cos(idx + 0.5))),
+                static_cast<glm::mediump_float>(std::abs(std::cos(idx))),
+                1.0f},
+            .renderObject {.shaderProgram{ glCreateProgram() }}
+        }; });
 
-// Quit when ESC is released
-static void KbdCallback(GLFWwindow* window, int key, int scancode, int action,
-                        int mods) {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
+    for (auto& triangle : triangles) {
+        attachShader(triangle.renderObject.shaderProgram,
+                     "triangle.vert", GL_VERTEX_SHADER);
+        attachShader(triangle.renderObject.shaderProgram,
+                     "triangle.frag", GL_FRAGMENT_SHADER);
+        glGenVertexArrays(1, &triangle.renderObject.VAO);
+        glGenBuffers(1, &triangle.renderObject.VBO);
+
+        const glm::mediump_float k{ 0.5f };
+
+        const std::array<const glm::vec3, 3> vertices{
+            glm::vec3{ -k, -k, 0.0f },
+            glm::vec3{ k, -k, 0.0f },
+            glm::vec3{ 0,  k, 0.0f },
+        };
+        buildTriangleVertices(triangle.renderObject, vertices);
+    }
+
+    return triangles;
 }
 
 void initializeImGui(GLFWwindow* window) {
@@ -174,4 +176,11 @@ void renderGui(const std::span<Triangle>& triangles) {
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+// Quit when ESC is released
+static void KbdCallback(GLFWwindow* window, int key, int scancode, int action,
+                        int mods) {
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
