@@ -25,7 +25,7 @@ struct Triangle {
     float pointSize;
     float scale;
     float rotateDeg;
-    std::array<glm::mediump_float, 4> color;
+    std::array<float, 4> color;
     RenderObject renderObject;
 };
 
@@ -89,9 +89,9 @@ std::array<Triangle, N> initializeTriangles() {
             .scale{ 2.0f - (0.02f * idx) },
             .rotateDeg{std::fmod(5.0f * idx, 360.0f)},
             .color{
-                static_cast<glm::mediump_float>(std::abs(std::sin(idx))),
-                static_cast<glm::mediump_float>(std::abs(std::cos(idx + 0.5))),
-                static_cast<glm::mediump_float>(std::abs(std::cos(idx))),
+                static_cast<float>(std::abs(std::sin(idx))),
+                static_cast<float>(std::abs(std::cos(idx + 0.5))),
+                static_cast<float>(std::abs(std::cos(idx))),
                 1.0f
             },
             .renderObject {.shaderProgram{ glCreateProgram() }}
@@ -105,7 +105,7 @@ std::array<Triangle, N> initializeTriangles() {
         glGenVertexArrays(1, &triangle.renderObject.VAO);
         glGenBuffers(1, &triangle.renderObject.VBO);
 
-        const glm::mediump_float k{ 0.5f };
+        const float k{ 0.5f };
 
         const std::array<const glm::vec3, 3> vertices{
             glm::vec3{ -k, -k, 0.0f },
@@ -144,7 +144,7 @@ void renderGl(const std::span<const Triangle>& triangles) {
         if (triangle.fill) glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glm::mat4 trans{ glm::mat4(1.0f) };
-        trans = glm::rotate(trans, triangle.rotateDeg, glm::vec3(
+        trans = glm::rotate(trans, glm::radians(triangle.rotateDeg), glm::vec3(
             0.0, 0.0, 1.0
         ));
         trans = glm::scale(trans, glm::vec3(
