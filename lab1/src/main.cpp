@@ -24,6 +24,7 @@ struct Triangle {
     bool fill;
     float pointSize;
     float scale;
+    float rotateDeg;
     std::array<glm::mediump_float, 4> color;
     RenderObject renderObject;
 };
@@ -49,7 +50,7 @@ int main() {
 
     glViewport(0, 0, 800, 800);
 
-    const GLsizei size{ 50 };
+    const GLsizei size{ 100 };
     auto triangles{ initializeTriangles<size>() };
 
     // Set background color
@@ -83,9 +84,10 @@ std::array<Triangle, N> initializeTriangles() {
         indices.begin(), indices.end(), triangles.begin(),
         [](const auto& idx) { return Triangle{
             .border{ true },
-            .fill{ false },
-            .pointSize { 20.0f / (idx + 1)},
-            .scale{ 2.0f / (idx + 1) },
+            .fill{ true },
+            .pointSize { 20.0f - (idx + 1)},
+            .scale{ 2.0f - (0.02f * idx) },
+            .rotateDeg{std::fmod(5.0f * idx, 360.0f)},
             .color{
                 static_cast<glm::mediump_float>(std::abs(std::sin(idx))),
                 static_cast<glm::mediump_float>(std::abs(std::cos(idx + 0.5))),
@@ -141,13 +143,23 @@ void renderGl(const std::span<const Triangle>& triangles) {
 
         if (triangle.fill) glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        glUniform1f(glGetUniformLocation(triangle.renderObject.shaderProgram,
-                                         "scale"),
-                    triangle.scale);
-        glUniform4f(glGetUniformLocation(triangle.renderObject.shaderProgram,
-                                         "color"),
-                    triangle.color.at(0), triangle.color.at(1),
-                    triangle.color.at(2), triangle.color.at(3));
+        glm::mat4 trans{ glm::mat4(1.0f) };
+        trans = glm::rotate(trans, triangle.rotateDeg, glm::vec3(
+            0.0, 0.0, 1.0
+        ));
+        trans = glm::scale(trans, glm::vec3(
+            triangle.scale, triangle.scale, triangle.scale
+        ));
+        glUniformMatrix4fv(
+            glGetUniformLocation(triangle.renderObject.shaderProgram, "trans"),
+            1, GL_FALSE, glm::value_ptr(trans)
+        );
+
+        glUniform4f(
+            glGetUniformLocation(triangle.renderObject.shaderProgram, "color"),
+            triangle.color.at(0), triangle.color.at(1),
+            triangle.color.at(2), triangle.color.at(3)
+        );
     }
 }
 
@@ -179,6 +191,7 @@ void renderGui(const std::span<Triangle>& triangles) {
     ImGui::SliderFloat("Point Size", &triangles[selectedIdx].pointSize,
                        5.0f, 20.0f);
     ImGui::SliderFloat("Scale", &triangles[selectedIdx].scale, 0.0f, 2.0f);
+    ImGui::SliderFloat("Rotate", &triangles[selectedIdx].rotateDeg, 0.0f, 360.0f);
     ImGui::ColorEdit4("Color", triangles[selectedIdx].color.data());
     ImGui::End();
 
