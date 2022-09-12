@@ -522,4 +522,4 @@ FodyWeavers.xsd
 
 # End of https://www.toptal.com/developers/gitignore/api/c++,windows,linux,macos,visualstudio,visualstudiocode
 
-!libs/**.*
+!**/libs/**.*
