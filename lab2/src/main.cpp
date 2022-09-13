@@ -25,13 +25,14 @@ bbenes@purdue.edu
 #include <math.h>
 #include <time.h>
 #include <string>
-#include <vector>			//Standard template library
+#include <vector>
 #include <array>
 
-#include "triangle.h"  //triangles
+#include "triangle.h" //triangles
 #include "helper.h"         
-#include "objGen.h"         //to save OBJ file format for 3D printing
+#include "objGen.h" //to save OBJ file format for 3D printing
 #include "trackball.h"
+#include "editor.h"
 
 #pragma warning(disable : 4996)
 #pragma comment(lib, "glfw3.lib")
@@ -246,8 +247,10 @@ int main() {
     //Paste the window to the current context
     glfwMakeContextCurrent(window);
 
-    //Load GLAD to configure OpenGL
-    gladLoadGL();
+    if (!gladLoadGL()) {
+        std::cout << "Failed to initialize OpenGL context" << std::endl;
+        return -1;
+    }
     //Set the viewport
     glViewport(0, 0, 800, 800);
 
@@ -279,11 +282,18 @@ int main() {
 
     glfwSetKeyCallback(window, KbdCallback); //set keyboard callback to quit
     glfwSetCursorPosCallback(window, MouseCallback);
-    glfwSetMouseButtonCallback(window, MouseButtonCallback);;
+    glfwSetMouseButtonCallback(window, MouseButtonCallback);
+
+    const auto editorWindow = createEditorWindow();
+    if (editorWindow == nullptr) {
+        std::cout << "Cannot create window" << std::endl;
+        glfwTerminate();
+        return -1;
+    }
 
     // Main while loop
-    while (!glfwWindowShouldClose(window)) {
-        //Clean the window
+    while (!glfwWindowShouldClose(window) && !glfwWindowShouldClose(editorWindow)) {
+        glfwMakeContextCurrent(window);
         glClear(GL_COLOR_BUFFER_BIT);
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -337,6 +347,14 @@ int main() {
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         //Swap the back buffer with the front buffer
         glfwSwapBuffers(window);
+
+
+        if (renderEditor(editorWindow)) {
+            std::cout << "Editor rendering error" << std::endl;
+            glfwTerminate();
+            return -1;
+        }
+
         //make sure events are served
         glfwPollEvents();
     }
@@ -345,6 +363,7 @@ int main() {
     glDeleteBuffers(1, &VBO);
     glDeleteProgram(shaderProg);
     glfwDestroyWindow(window);
+    glfwDestroyWindow(editorWindow);
     glfwTerminate();
     return 0;
 }
