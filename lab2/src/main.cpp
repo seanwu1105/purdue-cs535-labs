@@ -5,28 +5,26 @@ Purdue University
 bbenes@purdue.edu
 */
 
+#include <iostream>
+#include <stdio.h>
+#include <string.h>
+#define _USE_MATH_DEFINES
+#include <cmath>
+#include <time.h>
+#include <string>
+#include <vector>
+#include <array>
+
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-
-#include <iostream>
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_transform.hpp"
-
-#include <stdio.h>
-#include <iostream>
-#include <string.h>
-#define _USE_MATH_DEFINES
-#include <math.h>
-#include <time.h>
-#include <string>
-#include <vector>
-#include <array>
 
 #include "triangle.h" //triangles
 #include "helper.h"         
@@ -50,7 +48,7 @@ int lineWidth = 1;
 GLdouble mouseX, mouseY;
 
 //Vertex array object and vertex buffer object indices 
-GLuint VAO, VBO;
+GLuint visualizationVAO, visualizationVBO;
 
 
 inline void AddVertex(std::vector <GLfloat>* a, glm::vec3 A) {
@@ -129,7 +127,7 @@ int CompileShaders() {
     return shaderProg;
 }
 
-void BuildScene(GLuint& VBO, GLuint& VAO, int n) { //return VBO and VAO values n is the subdivision
+void buildScene(GLuint& VBO, GLuint& VAO, int n) { //return VBO and VAO values n is the subdivision
     std::vector<GLfloat> v;
     CreateRuled(&v, n);
     //now get it ready for saving as OBJ
@@ -244,15 +242,65 @@ GLFWwindow* createEditorWindow() {
     return window;
 }
 
-struct RenderObject {
-    GLuint shaderProgram;
-    GLuint VAO;
-    GLuint VBO;
-};
+void buildEditorAxisVertices(const GLuint VAO, const GLuint VBO) {
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-int renderEditor(GLFWwindow* window) {
+    const std::array<const glm::vec3, 4> vertices{
+        glm::vec3{-1.0f,0.0f,0.0f},
+        glm::vec3{1.0f,0.0f,0.0f},
+        glm::vec3{0.0f,-1.0f,0.0f},
+        glm::vec3{0.0f,1.0f,0.0f},
+    };
+
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), vertices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+}
+
+auto createrEditorAxisShaderProgram() {
+    const auto shaderProgram{ glCreateProgram() };
+
+    const auto vertexShaderSrc{
+        "#version 330 core\n"
+        "layout(location = 0) in vec3 aPos;\n"
+        "uniform mat4 trans;\n"
+        "void main() {\n"
+        "  gl_Position = trans * vec4(aPos, 1.0f);\n"
+        "}\n"
+    };
+    const auto vertexShader{ glCreateShader(GL_VERTEX_SHADER) };
+    glShaderSource(vertexShader, 1, &vertexShaderSrc, nullptr);
+    glCompileShader(vertexShader);
+    glAttachShader(shaderProgram, vertexShader);
+    glLinkProgram(shaderProgram);
+    glDeleteShader(vertexShader);
+
+    const auto fragmentShaderSrc{
+        "#version 330 core\n"
+        "out vec4 col;\n"
+        "void main() {\n"
+        "  col = (1.0f, 1.0f, 1.0f, 1.0f);\n"
+        "}\n"
+    };
+    const auto fragmentShader{ glCreateShader(GL_FRAGMENT_SHADER) };
+    glShaderSource(fragmentShader, 1, &fragmentShaderSrc, nullptr);
+    glCompileShader(fragmentShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+    glDeleteShader(fragmentShader);
+
+    return shaderProgram;
+}
+
+int renderEditor(GLFWwindow* window, const GLuint VAO, const GLuint VBO) {
     glfwMakeContextCurrent(window);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    glDrawArrays(GL_LINES, 0, 4);
+
     glfwSwapBuffers(window);
     return 0;
 }
@@ -266,7 +314,7 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     //make OpenGL window
-    GLFWwindow* window = glfwCreateWindow(800, 800, "Simple", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(800, 800, "Visualization", NULL, NULL);
     //is all OK?
     if (window == NULL) {
         std::cout << "Cannot open GLFW window" << std::endl;
@@ -284,7 +332,7 @@ int main() {
     glViewport(0, 0, 800, 800);
 
     //once the OpenGL context is done, build the scene and compile shaders
-    BuildScene(VBO, VAO, steps);
+    buildScene(visualizationVBO, visualizationVAO, steps);
     int shaderProg = CompileShaders();
     GLint modelviewParameter = glGetUniformLocation(shaderProg, "modelview");
 
@@ -319,12 +367,18 @@ int main() {
         glfwTerminate();
         return -1;
     }
-    const RenderObject editorAxisRenderObject{};
-    
+    GLuint editorAxisVAO, editorAxisVBO;
+    glGenVertexArrays(1, &editorAxisVAO);
+    glGenBuffers(1, &editorAxisVBO);
+    GLuint editorAxisShaderProgram{ createrEditorAxisShaderProgram() };
+    buildEditorAxisVertices(editorAxisVAO, editorAxisVBO);
+
 
     // Main while loop
     while (!glfwWindowShouldClose(window) && !glfwWindowShouldClose(editorWindow)) {
         glfwMakeContextCurrent(window);
+        glBindVertexArray(visualizationVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, visualizationVBO);
         glClear(GL_COLOR_BUFFER_BIT);
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -342,7 +396,7 @@ int main() {
         }
         //color picker
         if (ImGui::SliderInt("Mesh Subdivision", &steps, 1, 100, "%d", 0)) {
-            BuildScene(VBO, VAO, steps); //rebuild scene if the subdivision has changed
+            buildScene(visualizationVBO, visualizationVAO, steps); //rebuild scene if the subdivision has changed
         }
         if (ImGui::SliderInt("point Size", &pointSize, 1, 10, "%d", 0)) {
             glPointSize(pointSize); //set the new point size if it has been changed			
@@ -380,7 +434,7 @@ int main() {
         glfwSwapBuffers(window);
 
 
-        if (renderEditor(editorWindow)) {
+        if (renderEditor(editorWindow, editorAxisVAO, editorAxisVBO)) {
             std::cout << "Editor rendering error" << std::endl;
             glfwTerminate();
             return -1;
@@ -390,8 +444,8 @@ int main() {
         glfwPollEvents();
     }
     //Cleanup
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
+    glDeleteVertexArrays(1, &visualizationVAO);
+    glDeleteBuffers(1, &visualizationVBO);
     glDeleteProgram(shaderProg);
     glfwDestroyWindow(window);
     glfwDestroyWindow(editorWindow);
