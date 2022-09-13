@@ -32,18 +32,15 @@ bbenes@purdue.edu
 #include "helper.h"         
 #include "objGen.h" //to save OBJ file format for 3D printing
 #include "trackball.h"
-#include "editor.h"
 
 #pragma warning(disable : 4996)
 #pragma comment(lib, "glfw3.lib")
 
 
-using namespace std;
-
 TrackBallC trackball;
 bool mouseLeft, mouseMid, mouseRight;
 
-vector <TriangleC> tri;   //all the triangles will be stored here
+std::vector <TriangleC> tri;   //all the triangles will be stored here
 std::string filename = "geometry.obj";
 
 GLuint points = 0; //number of points to display the object
@@ -56,7 +53,7 @@ GLdouble mouseX, mouseY;
 GLuint VAO, VBO;
 
 
-inline void AddVertex(vector <GLfloat>* a, glm::vec3 A) {
+inline void AddVertex(std::vector <GLfloat>* a, glm::vec3 A) {
     a->push_back(A[0]); a->push_back(A[1]); a->push_back(A[2]);
 }
 
@@ -69,7 +66,7 @@ inline glm::vec3 S(GLfloat u, GLfloat v) {
     return glm::vec3{ P(u) * sin(2 * M_PI * v), u, P(u) * cos(2 * M_PI * v) };
 }
 
-void CreateRuled(vector <GLfloat>* vv, int n) {
+void CreateRuled(std::vector <GLfloat>* vv, int n) {
     GLfloat step = 1.f / n;
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
@@ -133,7 +130,7 @@ int CompileShaders() {
 }
 
 void BuildScene(GLuint& VBO, GLuint& VAO, int n) { //return VBO and VAO values n is the subdivision
-    vector<GLfloat> v;
+    std::vector<GLfloat> v;
     CreateRuled(&v, n);
     //now get it ready for saving as OBJ
     tri.clear();
@@ -228,6 +225,38 @@ void MouseButtonCallback(GLFWwindow* window, int button, int state, int mods) {
 }
 
 
+GLFWwindow* createEditorWindow() {
+    if (glfwInit() != GLFW_TRUE) return nullptr;
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    GLFWwindow* window = glfwCreateWindow(800, 800, "XY Plane", nullptr, nullptr);
+    if (window == nullptr) {
+        glfwTerminate();
+        return nullptr;
+    }
+    glfwMakeContextCurrent(window);
+    if (!gladLoadGL()) return nullptr;
+    glViewport(0, 0, 800, 800);
+    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+
+    return window;
+}
+
+struct RenderObject {
+    GLuint shaderProgram;
+    GLuint VAO;
+    GLuint VBO;
+};
+
+int renderEditor(GLFWwindow* window) {
+    glfwMakeContextCurrent(window);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glfwSwapBuffers(window);
+    return 0;
+}
+
 int main() {
     glfwInit();
 
@@ -290,6 +319,8 @@ int main() {
         glfwTerminate();
         return -1;
     }
+    const RenderObject editorAxisRenderObject{};
+    
 
     // Main while loop
     while (!glfwWindowShouldClose(window) && !glfwWindowShouldClose(editorWindow)) {
