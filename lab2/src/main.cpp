@@ -55,22 +55,17 @@ GLdouble mouseX, mouseY;
 GLuint VAO, VBO;
 
 
-inline void AddVertex(vector <GLfloat>* a, glm::vec3 A) //check this!
-{
+inline void AddVertex(vector <GLfloat>* a, glm::vec3 A) {
     a->push_back(A[0]); a->push_back(A[1]); a->push_back(A[2]);
 }
 
 
-glm::vec3 P(GLfloat t) {
-    return glm::vec3(0.3 * cos(2 * M_PI * t + M_PI / 2), 0, 0.6 * sin(2 * M_PI * t + M_PI / 2));
+auto P(GLfloat u) {
+    return u;
 }
 
-inline glm::vec3 Q(GLfloat t) {
-    return glm::vec3(0.6 * cos(2 * M_PI * t), 1, 0.6 * sin(2 * M_PI * t));
-}
-
-inline glm::vec3 S(GLfloat u, GLfloat t) {
-    return glm::vec3(u * P(t) + (1 - u) * Q(t));
+inline glm::vec3 S(GLfloat u, GLfloat v) {
+    return glm::vec3{ P(u) * sin(2 * M_PI * v), u, P(u) * cos(2 * M_PI * v) };
 }
 
 void CreateRuled(vector <GLfloat>* vv, int n) {
