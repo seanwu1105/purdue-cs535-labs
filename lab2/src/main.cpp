@@ -223,13 +223,14 @@ void MouseButtonCallback(GLFWwindow* window, int button, int state, int mods) {
 }
 
 
-GLFWwindow* createEditorWindow() {
+GLFWwindow* createEditorWindow(int size) {
     if (glfwInit() != GLFW_TRUE) return nullptr;
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-    GLFWwindow* window = glfwCreateWindow(800, 800, "XY Plane", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(size, size, "XY Plane", nullptr, nullptr);
     if (window == nullptr) {
         glfwTerminate();
         return nullptr;
@@ -361,18 +362,28 @@ int main() {
     glfwSetCursorPosCallback(window, MouseCallback);
     glfwSetMouseButtonCallback(window, MouseButtonCallback);
 
-    const auto editorWindow = createEditorWindow();
+    const int editorSize = 800;
+    const auto editorWindow = createEditorWindow(editorSize);
     if (editorWindow == nullptr) {
         std::cout << "Cannot create window" << std::endl;
         glfwTerminate();
         return -1;
     }
-    GLuint editorAxisVAO, editorAxisVBO;
+    GLuint editorAxisVAO{}, editorAxisVBO{};
     glGenVertexArrays(1, &editorAxisVAO);
     glGenBuffers(1, &editorAxisVBO);
     GLuint editorAxisShaderProgram{ createrEditorAxisShaderProgram() };
     buildEditorAxisVertices(editorAxisVAO, editorAxisVBO);
 
+    std::vector<std::pair<double, double>> editorVertices{};
+
+    glfwSetMouseButtonCallback(editorWindow, [](GLFWwindow* window, int button, int action, int mods) {
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+            double x{}, y{};
+            glfwGetCursorPos(window, &x, &y);
+            std::cout << x << ", " << y << std::endl;
+        }
+                               });
 
     // Main while loop
     while (!glfwWindowShouldClose(window) && !glfwWindowShouldClose(editorWindow)) {
