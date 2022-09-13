@@ -259,51 +259,60 @@ void buildEditorAxisVertices(const GLuint VAO, const GLuint VBO) {
     glEnableVertexAttribArray(0);
 }
 
-auto createrEditorAxisShaderProgram() {
+auto createShaderProgram(const GLchar* const* vertexShaderSrc, const GLchar* const* fragmentShaderSrc) {
     const auto shaderProgram{ glCreateProgram() };
 
-    const auto vertexShaderSrc{
-        "#version 330 core\n"
-        "layout(location = 0) in vec3 aPos;\n"
-        "uniform mat4 trans;\n"
-        "void main() {\n"
-        "  gl_Position = trans * vec4(aPos, 1.0f);\n"
-        "}\n"
+    const std::array<GLuint, 2> shaders{
+        glCreateShader(GL_VERTEX_SHADER),
+        glCreateShader(GL_FRAGMENT_SHADER)
     };
-    const auto vertexShader{ glCreateShader(GL_VERTEX_SHADER) };
-    glShaderSource(vertexShader, 1, &vertexShaderSrc, nullptr);
-    glCompileShader(vertexShader);
-    glAttachShader(shaderProgram, vertexShader);
+    glShaderSource(shaders.at(0), 1, vertexShaderSrc, nullptr);
+    glShaderSource(shaders.at(1), 1, fragmentShaderSrc, nullptr);
+    for (const auto& shader : shaders) {
+        glCompileShader(shader);
+        glAttachShader(shaderProgram, shader);
+        glDeleteShader(shader);
+    }
     glLinkProgram(shaderProgram);
-    glDeleteShader(vertexShader);
-
-    const auto fragmentShaderSrc{
-        "#version 330 core\n"
-        "out vec4 col;\n"
-        "void main() {\n"
-        "  col = (1.0f, 1.0f, 1.0f, 1.0f);\n"
-        "}\n"
-    };
-    const auto fragmentShader{ glCreateShader(GL_FRAGMENT_SHADER) };
-    glShaderSource(fragmentShader, 1, &fragmentShaderSrc, nullptr);
-    glCompileShader(fragmentShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    glDeleteShader(fragmentShader);
 
     return shaderProgram;
 }
 
-int renderEditor(GLFWwindow* window, const GLuint VAO, const GLuint VBO) {
-    glfwMakeContextCurrent(window);
+void renderEditorAxes(GLFWwindow* window, const GLuint shaderProgram, const GLuint VAO, const GLuint VBO) {
+    glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glClear(GL_COLOR_BUFFER_BIT);
 
     glDrawArrays(GL_LINES, 0, 4);
+}
 
-    glfwSwapBuffers(window);
-    return 0;
+struct WindowUserData {
+    double lastClickedXPos;
+    double lastClickedYPos;
+};
+
+void renderEditorVertices(GLFWwindow* window, const GLuint shaderProgram, const GLuint VAO, const GLuint VBO, std::vector<glm::vec2>& vertices, const int windowSize) {
+    glUseProgram(shaderProgram);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    const auto data{ (WindowUserData*)glfwGetWindowUserPointer(window) };
+    if (data && data->lastClickedXPos >= 0 && data->lastClickedYPos >= 0) {
+        std::cout << data->lastClickedXPos << ", " << data->lastClickedYPos << std::endl;
+
+        vertices.push_back(glm::vec2{
+            (GLfloat)(data->lastClickedXPos / (windowSize / 2)) - 1,
+            -((GLfloat)(data->lastClickedYPos / (windowSize / 2)) - 1)
+                           });
+        data->lastClickedXPos = -1;
+        data->lastClickedYPos = -1;
+
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec2), vertices.data(), GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (GLvoid*)0);
+        glEnableVertexAttribArray(0);
+    }
+
+    glDrawArrays(GL_LINE_STRIP, 0, vertices.size());
 }
 
 int main() {
@@ -362,8 +371,8 @@ int main() {
     glfwSetCursorPosCallback(window, MouseCallback);
     glfwSetMouseButtonCallback(window, MouseButtonCallback);
 
-    const int editorSize = 800;
-    const auto editorWindow = createEditorWindow(editorSize);
+    const int editorWindowSize = 800;
+    const auto editorWindow = createEditorWindow(editorWindowSize);
     if (editorWindow == nullptr) {
         std::cout << "Cannot create window" << std::endl;
         glfwTerminate();
@@ -372,16 +381,52 @@ int main() {
     GLuint editorAxisVAO{}, editorAxisVBO{};
     glGenVertexArrays(1, &editorAxisVAO);
     glGenBuffers(1, &editorAxisVBO);
-    GLuint editorAxisShaderProgram{ createrEditorAxisShaderProgram() };
+    const auto editorAxisVertexShaderSrc{
+        "#version 330 core\n"
+        "layout(location = 0) in vec3 aPos;\n"
+        "void main() {\n"
+        "  gl_Position = vec4(aPos, 1.0f);\n"
+        "}\n"
+    };
+    const auto editorAxisFragmentShaderSrc{
+        "#version 330 core\n"
+        "out vec4 col;\n"
+        "void main() {\n"
+        "  col = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
+        "}\n"
+    };
+    GLuint editorAxisShaderProgram{ createShaderProgram(&editorAxisVertexShaderSrc, &editorAxisFragmentShaderSrc) };
     buildEditorAxisVertices(editorAxisVAO, editorAxisVBO);
 
-    std::vector<std::pair<double, double>> editorVertices{};
+    GLuint editorVertexVAO{}, editorVertexVBO{};
+    glGenVertexArrays(1, &editorVertexVAO);
+    glGenBuffers(1, &editorVertexVBO);
+    const auto editorVertexVertexShaderSrc{
+        "#version 330 core\n"
+        "layout(location = 0) in vec2 aPos;\n"
+        "void main() {\n"
+        "  gl_Position = vec4(aPos, 1.0f, 1.0f);\n"
+        "}\n"
+    };
+    const auto editorVertexFragmentShaderSrc{
+        "#version 330 core\n"
+        "out vec4 col;\n"
+        "void main() {\n"
+        "  col = vec4(0.5f, 1.0f, 1.0f, 1.0f);\n"
+        "}\n"
+    };
+    GLuint editorVertexShaderProgram{ createShaderProgram(&editorVertexVertexShaderSrc, &editorVertexFragmentShaderSrc) };
+    std::vector<glm::vec2> editorVertices{};
 
+    WindowUserData editorWindowData{ -1, -1 };
+    glfwSetWindowUserPointer(editorWindow, &editorWindowData);
     glfwSetMouseButtonCallback(editorWindow, [](GLFWwindow* window, int button, int action, int mods) {
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
             double x{}, y{};
             glfwGetCursorPos(window, &x, &y);
-            std::cout << x << ", " << y << std::endl;
+            auto data = (WindowUserData*)glfwGetWindowUserPointer(window);
+            data->lastClickedXPos = x;
+            data->lastClickedYPos = y;
         }
                                });
 
@@ -444,12 +489,11 @@ int main() {
         //Swap the back buffer with the front buffer
         glfwSwapBuffers(window);
 
-
-        if (renderEditor(editorWindow, editorAxisVAO, editorAxisVBO)) {
-            std::cout << "Editor rendering error" << std::endl;
-            glfwTerminate();
-            return -1;
-        }
+        glfwMakeContextCurrent(editorWindow);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderEditorAxes(editorWindow, editorAxisShaderProgram, editorAxisVAO, editorAxisVBO);
+        renderEditorVertices(editorWindow, editorVertexShaderProgram, editorVertexVAO, editorVertexVBO, editorVertices, editorWindowSize);
+        glfwSwapBuffers(editorWindow);
 
         //make sure events are served
         glfwPollEvents();
