@@ -304,13 +304,27 @@ void renderEditorAxes(GLFWwindow* window, const GLuint shaderProgram, const GLui
     glDrawArrays(GL_LINES, 0, 4);
 }
 
+void updateVertexBufferData(std::map<GLfloat, GLfloat>& yxPairs) {
+    std::vector<glm::vec2> vertices{};
+    for (const auto& [y, x] : yxPairs) vertices.push_back(glm::vec2{ x, y });
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec2), vertices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (GLvoid*)0);
+    glEnableVertexAttribArray(0);
+}
+
 struct EditorWindowUserData {
     ImGuiContext* guiContext;
     GLfloat lastClickedXPos;
     GLfloat lastClickedYPos;
 };
 
-void renderEditorVertices(GLFWwindow* window, const GLuint shaderProgram, const GLuint VAO, const GLuint VBO, std::map<GLfloat, GLfloat>& yxPairs, const int windowSize) {
+void renderEditorVertices(GLFWwindow* window, const GLuint shaderProgram,
+                          const GLuint VAO, const GLuint VBO,
+                          std::map<GLfloat, GLfloat>& yxPairs,
+                          std::vector<GLfloat>& yxPairInsertionOrder,
+                          bool& shouldRemoveLastVertex,
+                          bool& shouldClearAllVertices,
+                          const int windowSize) {
     glfwMakeContextCurrent(window);
     glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
@@ -321,32 +335,44 @@ void renderEditorVertices(GLFWwindow* window, const GLuint shaderProgram, const 
         const auto normalizedX = (GLfloat)(data->lastClickedXPos / ((GLfloat)windowSize / 2)) - 1;
         const auto normalizedY = -(data->lastClickedYPos / ((GLfloat)windowSize / 2) - 1);
         yxPairs[normalizedY] = normalizedX;
+        yxPairInsertionOrder.push_back(normalizedY);
         data->lastClickedXPos = -1;
         data->lastClickedYPos = -1;
 
-        std::vector<glm::vec2> vertices{};
-        for (const auto& [y, x] : yxPairs) vertices.push_back(glm::vec2{ x, y });
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec2), vertices.data(), GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (GLvoid*)0);
-        glEnableVertexAttribArray(0);
+        updateVertexBufferData(yxPairs);
+    }
+
+    if (shouldRemoveLastVertex) {
+        shouldRemoveLastVertex = false;
+        if (!yxPairInsertionOrder.empty()) {
+            const auto lastY = yxPairInsertionOrder.back();
+            yxPairInsertionOrder.pop_back();
+            yxPairs.erase(lastY);
+
+            updateVertexBufferData(yxPairs);
+        }
+    }
+
+    if (shouldClearAllVertices) {
+        shouldClearAllVertices = false;
+        yxPairs.clear();
+        yxPairInsertionOrder.clear();
+
+        updateVertexBufferData(yxPairs);
     }
 
     glDrawArrays(GL_LINE_STRIP, 0, yxPairs.size());
 }
 
-void renderEditorGui(ImGuiContext* guiContext) {
+void renderEditorGui(ImGuiContext* guiContext, bool& shouldRemoveLastVertex, bool& shouldClearAllVertices) {
     ImGui::SetCurrentContext(guiContext);
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
     ImGui::Begin("Controllers");
-    if (ImGui::Button("Clear All Points")) {
-        std::cout << "Clear All Points" << std::endl;
-    }
-    if (ImGui::Button("Delete Last Point")) {
-        std::cout << "Clear All Points" << std::endl;
-    }
+    if (ImGui::Button("Clear All Points")) shouldClearAllVertices = true;
+    if (ImGui::Button("Delete Last Point")) shouldRemoveLastVertex = true;
     ImGui::End();
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -354,7 +380,6 @@ void renderEditorGui(ImGuiContext* guiContext) {
 
 void editorMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
     auto data = (EditorWindowUserData*)glfwGetWindowUserPointer(window);
-    std::cout << (data == nullptr) << std::endl;
     if (data == nullptr) return;
     ImGui::SetCurrentContext(data->guiContext);
 
@@ -398,6 +423,7 @@ int main() {
 
     std::map<GLfloat, GLfloat> editorVertices{};
     auto prevEditorVertices{ editorVertices };
+    std::vector<GLfloat> editorVertexInsertionOrder{};
     buildScene(visualizationVBO, visualizationVAO, steps, editorVertices);
     int shaderProg = CompileShaders();
     GLint modelviewParameter = glGetUniformLocation(shaderProg, "modelview");
@@ -480,6 +506,8 @@ int main() {
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(editorWindow, true);
     ImGui_ImplOpenGL3_Init("#version 330");
+    bool shouldRemoveLastVertex{ false };
+    bool shouldClearAllVertices{ false };
 
     EditorWindowUserData editorWindowData{ editorGuiContext, -1, -1 };
     glfwSetWindowUserPointer(editorWindow, &editorWindowData);
@@ -551,8 +579,13 @@ int main() {
         glfwMakeContextCurrent(editorWindow);
         glClear(GL_COLOR_BUFFER_BIT);
         renderEditorAxes(editorWindow, editorAxisShaderProgram, editorAxisVAO, editorAxisVBO);
-        renderEditorVertices(editorWindow, editorVertexShaderProgram, editorVertexVAO, editorVertexVBO, editorVertices, editorWindowSize);
-        renderEditorGui(editorGuiContext);
+        renderEditorVertices(editorWindow, editorVertexShaderProgram,
+                             editorVertexVAO, editorVertexVBO,
+                             editorVertices, editorVertexInsertionOrder,
+                             shouldRemoveLastVertex,
+                             shouldClearAllVertices,
+                             editorWindowSize);
+        renderEditorGui(editorGuiContext, shouldRemoveLastVertex, shouldClearAllVertices);
         glfwSwapBuffers(editorWindow);
 
         //make sure events are served
