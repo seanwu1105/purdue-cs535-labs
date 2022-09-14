@@ -6,14 +6,12 @@ bbenes@purdue.edu
 */
 
 #include <iostream>
-#include <stdio.h>
-#include <string.h>
 #define _USE_MATH_DEFINES
 #include <cmath>
-#include <time.h>
 #include <string>
 #include <vector>
 #include <array>
+#include <map>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -287,32 +285,31 @@ void renderEditorAxes(GLFWwindow* window, const GLuint shaderProgram, const GLui
 }
 
 struct WindowUserData {
-    double lastClickedXPos;
-    double lastClickedYPos;
+    GLfloat lastClickedXPos;
+    GLfloat lastClickedYPos;
 };
 
-void renderEditorVertices(GLFWwindow* window, const GLuint shaderProgram, const GLuint VAO, const GLuint VBO, std::vector<glm::vec2>& vertices, const int windowSize) {
+void renderEditorVertices(GLFWwindow* window, const GLuint shaderProgram, const GLuint VAO, const GLuint VBO, std::map<GLfloat, GLfloat>& yxPairs, const int windowSize) {
     glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
     const auto data{ (WindowUserData*)glfwGetWindowUserPointer(window) };
     if (data && data->lastClickedXPos >= 0 && data->lastClickedYPos >= 0) {
-        std::cout << data->lastClickedXPos << ", " << data->lastClickedYPos << std::endl;
-
-        vertices.push_back(glm::vec2{
-            (GLfloat)(data->lastClickedXPos / (windowSize / 2)) - 1,
-            -((GLfloat)(data->lastClickedYPos / (windowSize / 2)) - 1)
-                           });
+        const auto normalizedX = (GLfloat)(data->lastClickedXPos / ((GLfloat)windowSize / 2)) - 1;
+        const auto normalizedY = -(data->lastClickedYPos / ((GLfloat)windowSize / 2) - 1);
+        yxPairs[normalizedY] = normalizedX;
         data->lastClickedXPos = -1;
         data->lastClickedYPos = -1;
 
+        std::vector<glm::vec2> vertices{};
+        for (const auto& [y, x] : yxPairs) vertices.push_back(glm::vec2{ x, y });
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec2), vertices.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (GLvoid*)0);
         glEnableVertexAttribArray(0);
     }
 
-    glDrawArrays(GL_LINE_STRIP, 0, vertices.size());
+    glDrawArrays(GL_LINE_STRIP, 0, yxPairs.size());
 }
 
 int main() {
@@ -392,7 +389,7 @@ int main() {
         "#version 330 core\n"
         "out vec4 col;\n"
         "void main() {\n"
-        "  col = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
+        "  col = vec4(0.5f, 0.5f, 0.5f, 1.0f);\n"
         "}\n"
     };
     GLuint editorAxisShaderProgram{ createShaderProgram(&editorAxisVertexShaderSrc, &editorAxisFragmentShaderSrc) };
@@ -412,11 +409,11 @@ int main() {
         "#version 330 core\n"
         "out vec4 col;\n"
         "void main() {\n"
-        "  col = vec4(0.5f, 1.0f, 1.0f, 1.0f);\n"
+        "  col = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
         "}\n"
     };
     GLuint editorVertexShaderProgram{ createShaderProgram(&editorVertexVertexShaderSrc, &editorVertexFragmentShaderSrc) };
-    std::vector<glm::vec2> editorVertices{};
+    std::map<GLfloat, GLfloat> editorVertices{};
 
     WindowUserData editorWindowData{ -1, -1 };
     glfwSetWindowUserPointer(editorWindow, &editorWindowData);
@@ -425,8 +422,8 @@ int main() {
             double x{}, y{};
             glfwGetCursorPos(window, &x, &y);
             auto data = (WindowUserData*)glfwGetWindowUserPointer(window);
-            data->lastClickedXPos = x;
-            data->lastClickedYPos = y;
+            data->lastClickedXPos = (GLfloat)x;
+            data->lastClickedYPos = (GLfloat)y;
         }
                                });
 
