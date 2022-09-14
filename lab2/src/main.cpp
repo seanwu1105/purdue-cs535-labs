@@ -54,26 +54,39 @@ inline void AddVertex(std::vector <GLfloat>* a, glm::vec3 A) {
 }
 
 
-auto P(GLfloat u) {
-    return u;
+auto P(GLfloat u, std::map<GLfloat, GLfloat>& transformedEditorVertices) {
+    if (transformedEditorVertices.contains(u)) return transformedEditorVertices.at(u);
+    if (transformedEditorVertices.empty()) return 0.0f;
+    if (u < transformedEditorVertices.cbegin()->first) return 0.0f;
+    if (u > std::prev(transformedEditorVertices.end())->first) return 0.0f;
+
+    const auto end_point{ transformedEditorVertices.upper_bound(u) };
+    const auto start_point{ std::prev(end_point) };
+
+    return ((end_point->second - start_point->second) / (end_point->first - start_point->first)) * (u - start_point->first) + start_point->second;
 }
 
-inline glm::vec3 S(GLfloat u, GLfloat v) {
-    return glm::vec3{ P(u) * sin(2 * M_PI * v), u, P(u) * cos(2 * M_PI * v) };
+inline glm::vec3 S(GLfloat u, GLfloat v, std::map<GLfloat, GLfloat>& transformedEditorVertices) {
+    return glm::vec3{ P(u, transformedEditorVertices) * sin(2 * M_PI * v), u, P(u, transformedEditorVertices) * cos(2 * M_PI * v) };
 }
 
-void CreateRuled(std::vector <GLfloat>* vv, int n) {
-    GLfloat step = 1.f / n;
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
+void createRuled(std::vector <GLfloat>* vv, int step_count, std::map<GLfloat, GLfloat>& editorVertices) {
+    std::map<GLfloat, GLfloat> transformed{};
+
+    for (const auto& [key, value] : editorVertices)
+        transformed[(key + 1) / 2] = (value + 1) / 2;
+
+    GLfloat step = 1.f / step_count;
+    for (int i = 0; i < step_count; i++) {
+        for (int j = 0; j < step_count; j++) {
             //lower triangle
-            AddVertex(vv, S(i * step, j * step));
-            AddVertex(vv, S((i + 1) * step, j * step));
-            AddVertex(vv, S((i + 1) * step, (j + 1) * step));
+            AddVertex(vv, S(i * step, j * step, transformed));
+            AddVertex(vv, S((i + 1) * step, j * step, transformed));
+            AddVertex(vv, S((i + 1) * step, (j + 1) * step, transformed));
             //upper triangle
-            AddVertex(vv, S(i * step, j * step));
-            AddVertex(vv, S((i + 1) * step, (j + 1) * step));
-            AddVertex(vv, S(i * step, (j + 1) * step));
+            AddVertex(vv, S(i * step, j * step, transformed));
+            AddVertex(vv, S((i + 1) * step, (j + 1) * step, transformed));
+            AddVertex(vv, S(i * step, (j + 1) * step, transformed));
         }
     }
 }
@@ -125,9 +138,9 @@ int CompileShaders() {
     return shaderProg;
 }
 
-void buildScene(GLuint& VBO, GLuint& VAO, int n) { //return VBO and VAO values n is the subdivision
+void buildScene(GLuint& VBO, GLuint& VAO, int step_count, std::map<GLfloat, GLfloat>& editorVertices) {
     std::vector<GLfloat> v;
-    CreateRuled(&v, n);
+    createRuled(&v, step_count, editorVertices);
     //now get it ready for saving as OBJ
     tri.clear();
     for (unsigned int i = 0; i < v.size(); i += 9) { //stride 3 - 3 vertices per triangle
@@ -338,8 +351,9 @@ int main() {
     //Set the viewport
     glViewport(0, 0, 800, 800);
 
-    //once the OpenGL context is done, build the scene and compile shaders
-    buildScene(visualizationVBO, visualizationVAO, steps);
+    std::map<GLfloat, GLfloat> editorVertices{};
+    auto prevEditorVertices{ editorVertices };
+    buildScene(visualizationVBO, visualizationVAO, steps, editorVertices);
     int shaderProg = CompileShaders();
     GLint modelviewParameter = glGetUniformLocation(shaderProg, "modelview");
 
@@ -413,7 +427,6 @@ int main() {
         "}\n"
     };
     GLuint editorVertexShaderProgram{ createShaderProgram(&editorVertexVertexShaderSrc, &editorVertexFragmentShaderSrc) };
-    std::map<GLfloat, GLfloat> editorVertices{};
 
     WindowUserData editorWindowData{ -1, -1 };
     glfwSetWindowUserPointer(editorWindow, &editorWindowData);
@@ -447,9 +460,14 @@ int main() {
             SaveOBJ(&tri, filename);
             //ImGui::OpenPopup("Saved");
         }
-        //color picker
-        if (ImGui::SliderInt("Mesh Subdivision", &steps, 1, 100, "%d", 0)) {
-            buildScene(visualizationVBO, visualizationVAO, steps); //rebuild scene if the subdivision has changed
+        bool needRebuildScene{ false };
+        if (prevEditorVertices != editorVertices) {
+            needRebuildScene = true;
+            prevEditorVertices = editorVertices;
+        }
+        if (ImGui::SliderInt("Mesh Subdivision", &steps, 1, 100, "%d", 0) || needRebuildScene) {
+            buildScene(visualizationVBO, visualizationVAO, steps, editorVertices);
+            needRebuildScene = false;
         }
         if (ImGui::SliderInt("point Size", &pointSize, 1, 10, "%d", 0)) {
             glPointSize(pointSize); //set the new point size if it has been changed			
