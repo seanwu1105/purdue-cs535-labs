@@ -177,14 +177,19 @@ void buildScene(GLuint& VBO, GLuint& VAO, int step_count, std::map<GLfloat, GLfl
 }
 
 //Quit when ESC is released
-static void KbdCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+static void windowKbdCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
-//set the callbacks for the virtual trackball
-//this is executed when the mouse is moving
-void MouseCallback(GLFWwindow* window, double x, double y) {
-    //do not forget to pass the events to ImGUI!
+struct WindowUserData {
+    ImGuiContext* guiContext;
+};
+
+void windowCursorPosCallback(GLFWwindow* window, double x, double y) {
+    const auto windowData{ (WindowUserData*)glfwGetWindowUserPointer(window) };
+    if (windowData == nullptr) return;
+    ImGui::SetCurrentContext(windowData->guiContext);
+
     ImGuiIO& io = ImGui::GetIO();
     io.AddMousePosEvent(x, y);
     if (io.WantCaptureMouse) return; //make sure you do not call this callback when over a menu
@@ -197,10 +202,11 @@ void MouseCallback(GLFWwindow* window, double x, double y) {
     if (mouseRight) trackball.Zoom(mouseX, mouseY);
 }
 
-
 //set the variables when the button is pressed or released
-void MouseButtonCallback(GLFWwindow* window, int button, int state, int mods) {
-    //do not forget to pass the events to ImGUI!
+void windowMouseButtonCallback(GLFWwindow* window, int button, int state, int mods) {
+    const auto windowData{ (WindowUserData*)glfwGetWindowUserPointer(window) };
+    if (windowData == nullptr) return;
+    ImGui::SetCurrentContext(windowData->guiContext);
 
     ImGuiIO& io = ImGui::GetIO();
     io.AddMouseButtonEvent(button, state);
@@ -290,6 +296,7 @@ auto createShaderProgram(const GLchar* const* vertexShaderSrc, const GLchar* con
 }
 
 void renderEditorAxes(GLFWwindow* window, const GLuint shaderProgram, const GLuint VAO, const GLuint VBO) {
+    glfwMakeContextCurrent(window);
     glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -297,17 +304,19 @@ void renderEditorAxes(GLFWwindow* window, const GLuint shaderProgram, const GLui
     glDrawArrays(GL_LINES, 0, 4);
 }
 
-struct WindowUserData {
+struct EditorWindowUserData {
+    ImGuiContext* guiContext;
     GLfloat lastClickedXPos;
     GLfloat lastClickedYPos;
 };
 
 void renderEditorVertices(GLFWwindow* window, const GLuint shaderProgram, const GLuint VAO, const GLuint VBO, std::map<GLfloat, GLfloat>& yxPairs, const int windowSize) {
+    glfwMakeContextCurrent(window);
     glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-    const auto data{ (WindowUserData*)glfwGetWindowUserPointer(window) };
+    const auto data{ (EditorWindowUserData*)glfwGetWindowUserPointer(window) };
     if (data && data->lastClickedXPos >= 0 && data->lastClickedYPos >= 0) {
         const auto normalizedX = (GLfloat)(data->lastClickedXPos / ((GLfloat)windowSize / 2)) - 1;
         const auto normalizedY = -(data->lastClickedYPos / ((GLfloat)windowSize / 2) - 1);
@@ -323,6 +332,42 @@ void renderEditorVertices(GLFWwindow* window, const GLuint shaderProgram, const 
     }
 
     glDrawArrays(GL_LINE_STRIP, 0, yxPairs.size());
+}
+
+void renderEditorGui(ImGuiContext* guiContext) {
+    ImGui::SetCurrentContext(guiContext);
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    ImGui::Begin("Controllers");
+    if (ImGui::Button("Clear All Points")) {
+        std::cout << "Clear All Points" << std::endl;
+    }
+    if (ImGui::Button("Delete Last Point")) {
+        std::cout << "Clear All Points" << std::endl;
+    }
+    ImGui::End();
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void editorMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    auto data = (EditorWindowUserData*)glfwGetWindowUserPointer(window);
+    std::cout << (data == nullptr) << std::endl;
+    if (data == nullptr) return;
+    ImGui::SetCurrentContext(data->guiContext);
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.AddMouseButtonEvent(button, action);
+    if (io.WantCaptureMouse) return;
+
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+        double x{}, y{};
+        glfwGetCursorPos(window, &x, &y);
+        data->lastClickedXPos = (GLfloat)x;
+        data->lastClickedYPos = (GLfloat)y;
+    }
 }
 
 int main() {
@@ -366,8 +411,10 @@ int main() {
 
     // Initialize ImGUI
     IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    const auto windowGuiContext{ ImGui::CreateContext() };
+    WindowUserData windowData{ windowGuiContext };
+    glfwSetWindowUserPointer(window, &windowData);
+    ImGui::SetCurrentContext(windowGuiContext);
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
@@ -378,9 +425,9 @@ int main() {
     glUniform4f(glGetUniformLocation(shaderProg, "color"), color[0], color[1], color[2], color[3]);
 
 
-    glfwSetKeyCallback(window, KbdCallback); //set keyboard callback to quit
-    glfwSetCursorPosCallback(window, MouseCallback);
-    glfwSetMouseButtonCallback(window, MouseButtonCallback);
+    glfwSetKeyCallback(window, windowKbdCallback); //set keyboard callback to quit
+    glfwSetCursorPosCallback(window, windowCursorPosCallback);
+    glfwSetMouseButtonCallback(window, windowMouseButtonCallback);
 
     const int editorWindowSize = 800;
     const auto editorWindow = createEditorWindow(editorWindowSize);
@@ -428,24 +475,23 @@ int main() {
     };
     GLuint editorVertexShaderProgram{ createShaderProgram(&editorVertexVertexShaderSrc, &editorVertexFragmentShaderSrc) };
 
-    WindowUserData editorWindowData{ -1, -1 };
+    const auto editorGuiContext{ ImGui::CreateContext() };
+    ImGui::SetCurrentContext(editorGuiContext);
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(editorWindow, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+
+    EditorWindowUserData editorWindowData{ editorGuiContext, -1, -1 };
     glfwSetWindowUserPointer(editorWindow, &editorWindowData);
-    glfwSetMouseButtonCallback(editorWindow, [](GLFWwindow* window, int button, int action, int mods) {
-        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
-            double x{}, y{};
-            glfwGetCursorPos(window, &x, &y);
-            auto data = (WindowUserData*)glfwGetWindowUserPointer(window);
-            data->lastClickedXPos = (GLfloat)x;
-            data->lastClickedYPos = (GLfloat)y;
-        }
-                               });
+    glfwSetMouseButtonCallback(editorWindow, editorMouseButtonCallback);
 
     // Main while loop
     while (!glfwWindowShouldClose(window) && !glfwWindowShouldClose(editorWindow)) {
         glfwMakeContextCurrent(window);
+        ImGui::SetCurrentContext(windowGuiContext);
+        glClear(GL_COLOR_BUFFER_BIT);
         glBindVertexArray(visualizationVAO);
         glBindBuffer(GL_ARRAY_BUFFER, visualizationVBO);
-        glClear(GL_COLOR_BUFFER_BIT);
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -456,10 +502,8 @@ int main() {
         //checkbox to render or not the scene
         ImGui::Checkbox("Draw Scene", &drawScene);
         //checkbox to render or not the scene
-        if (ImGui::Button("Save OBJ")) {
-            SaveOBJ(&tri, filename);
-            //ImGui::OpenPopup("Saved");
-        }
+        if (ImGui::Button("Save OBJ")) SaveOBJ(&tri, filename);
+
         bool needRebuildScene{ false };
         if (prevEditorVertices != editorVertices) {
             needRebuildScene = true;
@@ -508,6 +552,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
         renderEditorAxes(editorWindow, editorAxisShaderProgram, editorAxisVAO, editorAxisVBO);
         renderEditorVertices(editorWindow, editorVertexShaderProgram, editorVertexVAO, editorVertexVBO, editorVertices, editorWindowSize);
+        renderEditorGui(editorGuiContext);
         glfwSwapBuffers(editorWindow);
 
         //make sure events are served
