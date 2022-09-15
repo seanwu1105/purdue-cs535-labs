@@ -54,41 +54,30 @@ inline void AddVertex(std::vector <GLfloat>* a, glm::vec3 A) {
 }
 
 
-auto P(GLfloat u, std::map<GLfloat, GLfloat>& transformedEditorVertices) {
-    if (transformedEditorVertices.contains(u)) return transformedEditorVertices.at(u);
-    if (transformedEditorVertices.empty()) return 0.0f;
-    if (u < transformedEditorVertices.cbegin()->first) return 0.0f;
-    if (u > std::prev(transformedEditorVertices.end())->first) return 0.0f;
-
-    const auto end_point{ transformedEditorVertices.upper_bound(u) };
-    const auto start_point{ std::prev(end_point) };
-
-    return ((end_point->second - start_point->second) / (end_point->first - start_point->first)) * (u - start_point->first) + start_point->second;
+auto P(const GLfloat u, const glm::vec2& p1, const glm::vec2& p2) {
+    return (p2[0] - p1[0]) / (p2[1] - p1[1]) * (u - p1[1]) + p1[0];
 }
 
-inline glm::vec3 S(GLfloat u, GLfloat v, std::map<GLfloat, GLfloat>& transformedEditorVertices) {
-    return glm::vec3{ P(u, transformedEditorVertices) * sin(2 * M_PI * v), u, P(u, transformedEditorVertices) * cos(2 * M_PI * v) };
+inline glm::vec3 S(const GLfloat u, const GLfloat v, const glm::vec2& p1, const glm::vec2& p2) {
+    return glm::vec3{ P(u, p1, p2) * sin(2 * M_PI * v), u, P(u, p1, p2) * cos(2 * M_PI * v) };
 }
 
-void createRuled(std::vector <GLfloat>* vv, int step_count, std::map<GLfloat, GLfloat>& editorVertices) {
-    std::map<GLfloat, GLfloat> transformed{};
-
-    for (const auto& [key, value] : editorVertices)
-        transformed[(key + 1) / 2] = (value + 1) / 2;
-
-    GLfloat step = 1.f / step_count;
-    for (int i = 0; i < step_count; i++) {
+void createRuled(std::vector <GLfloat>* vv, const int step_count, const glm::vec2& p1, const glm::vec2& p2) {
+    const auto yMin = fminf(p1[1], p2[1]);
+    GLfloat iStep = abs(p1[1] - p2[1]) / step_count;
+    GLfloat jStep = 1.0f / step_count;
+    for (int i = 0; i < step_count; i++)
         for (int j = 0; j < step_count; j++) {
             //lower triangle
-            AddVertex(vv, S(i * step, j * step, transformed));
-            AddVertex(vv, S((i + 1) * step, j * step, transformed));
-            AddVertex(vv, S((i + 1) * step, (j + 1) * step, transformed));
+            AddVertex(vv, S(yMin + i * iStep, j * jStep, p1, p2));
+            AddVertex(vv, S(yMin + (i + 1) * iStep, j * jStep, p1, p2));
+            AddVertex(vv, S(yMin + (i + 1) * iStep, (j + 1) * jStep, p1, p2));
             //upper triangle
-            AddVertex(vv, S(i * step, j * step, transformed));
-            AddVertex(vv, S((i + 1) * step, (j + 1) * step, transformed));
-            AddVertex(vv, S(i * step, (j + 1) * step, transformed));
+            AddVertex(vv, S(yMin + i * iStep, j * jStep, p1, p2));
+            AddVertex(vv, S(yMin + (i + 1) * iStep, (j + 1) * jStep, p1, p2));
+            AddVertex(vv, S(yMin + i * iStep, (j + 1) * jStep, p1, p2));
         }
-    }
+
 }
 
 
@@ -138,11 +127,20 @@ int CompileShaders() {
     return shaderProg;
 }
 
-void buildScene(GLuint& VBO, GLuint& VAO, int step_count, std::map<GLfloat, GLfloat>& editorVertices) {
-    std::vector<GLfloat> v;
-    createRuled(&v, step_count, editorVertices);
-    //now get it ready for saving as OBJ
+void buildScene(GLuint& VBO, GLuint& VAO, int step_count, std::vector<glm::vec2>& editorVertices) {
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
     tri.clear();
+
+    if (editorVertices.size() <= 1) return;
+
+    std::vector<GLfloat> v{};
+    for (size_t i = 1; i < editorVertices.size(); ++i) {
+        createRuled(&v, step_count, editorVertices.at(i - 1), editorVertices.at(i));
+    }
+
+    //now get it ready for saving as OBJ
     for (unsigned int i = 0; i < v.size(); i += 9) { //stride 3 - 3 vertices per triangle
         TriangleC tmp;
         glm::vec3 a, b, c;
@@ -153,27 +151,15 @@ void buildScene(GLuint& VBO, GLuint& VAO, int step_count, std::map<GLfloat, GLfl
         tri.push_back(tmp);
     }
 
-    //make VAO
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-
-    //bind it
     glBindVertexArray(VAO);
-
-    //bind the VBO
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    //send the data to the GPU
     points = v.size();
-    glBufferData(GL_ARRAY_BUFFER, points * sizeof(GLfloat), &v[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, v.size() * sizeof(GLfloat), &v[0], GL_STATIC_DRAW);
 
     //Configure the attributes
-//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     //Make it valid
     glEnableVertexAttribArray(0);
-
-    v.clear(); //no need for the data, it is on the GPU now
-
 }
 
 //Quit when ESC is released
@@ -304,9 +290,7 @@ void renderEditorAxes(GLFWwindow* window, const GLuint shaderProgram, const GLui
     glDrawArrays(GL_LINES, 0, 4);
 }
 
-void updateVertexBufferData(std::map<GLfloat, GLfloat>& yxPairs) {
-    std::vector<glm::vec2> vertices{};
-    for (const auto& [y, x] : yxPairs) vertices.push_back(glm::vec2{ x, y });
+void updateVertexBufferData(const std::vector<glm::vec2>& vertices) {
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec2), vertices.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (GLvoid*)0);
     glEnableVertexAttribArray(0);
@@ -320,8 +304,7 @@ struct EditorWindowUserData {
 
 void renderEditorVertices(GLFWwindow* window, const GLuint shaderProgram,
                           const GLuint VAO, const GLuint VBO,
-                          std::map<GLfloat, GLfloat>& yxPairs,
-                          std::vector<GLfloat>& yxPairInsertionOrder,
+                          std::vector<glm::vec2>& vertices,
                           bool& shouldRemoveLastVertex,
                           bool& shouldClearAllVertices,
                           const int windowSize) {
@@ -334,34 +317,28 @@ void renderEditorVertices(GLFWwindow* window, const GLuint shaderProgram,
     if (data && data->lastClickedXPos >= 0 && data->lastClickedYPos >= 0) {
         const auto normalizedX = (GLfloat)(data->lastClickedXPos / ((GLfloat)windowSize / 2)) - 1;
         const auto normalizedY = -(data->lastClickedYPos / ((GLfloat)windowSize / 2) - 1);
-        yxPairs[normalizedY] = normalizedX;
-        yxPairInsertionOrder.push_back(normalizedY);
+        vertices.push_back(glm::vec2{ normalizedX, normalizedY });
         data->lastClickedXPos = -1;
         data->lastClickedYPos = -1;
 
-        updateVertexBufferData(yxPairs);
+        updateVertexBufferData(vertices);
     }
 
     if (shouldRemoveLastVertex) {
         shouldRemoveLastVertex = false;
-        if (!yxPairInsertionOrder.empty()) {
-            const auto lastY = yxPairInsertionOrder.back();
-            yxPairInsertionOrder.pop_back();
-            yxPairs.erase(lastY);
-
-            updateVertexBufferData(yxPairs);
+        if (!vertices.empty()) {
+            vertices.pop_back();
+            updateVertexBufferData(vertices);
         }
     }
 
     if (shouldClearAllVertices) {
         shouldClearAllVertices = false;
-        yxPairs.clear();
-        yxPairInsertionOrder.clear();
-
-        updateVertexBufferData(yxPairs);
+        vertices.clear();
+        updateVertexBufferData(vertices);
     }
 
-    glDrawArrays(GL_LINE_STRIP, 0, yxPairs.size());
+    glDrawArrays(GL_LINE_STRIP, 0, vertices.size());
 }
 
 void renderEditorGui(ImGuiContext* guiContext, bool& shouldRemoveLastVertex, bool& shouldClearAllVertices) {
@@ -421,7 +398,7 @@ int main() {
     //Set the viewport
     glViewport(0, 0, 800, 800);
 
-    std::map<GLfloat, GLfloat> editorVertices{};
+    std::vector<glm::vec2> editorVertices{};
     auto prevEditorVertices{ editorVertices };
     std::vector<GLfloat> editorVertexInsertionOrder{};
     buildScene(visualizationVBO, visualizationVAO, steps, editorVertices);
@@ -560,8 +537,13 @@ int main() {
         glm::mat4 view = glm::lookAt(glm::vec3(0, 0, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
         //get the modeling matrix from the trackball
         glm::mat4 model = trackball.Set3DViewCameraMatrix();
+
+        const auto rotateDegOffset{ (float)glfwGetTime() * 100 };
+        const auto trans{ glm::rotate(glm::mat4(1.0f), rotateDegOffset, glm::vec3(0.0, 1.0, 1.0)) };
+
         //premultiply the modelViewProjection matrix
-        glm::mat4 modelView = proj * view * model;
+        glm::mat4 modelView = proj * view * model * trans;
+
         //and send it to the vertex shader
         glUniformMatrix4fv(modelviewParameter, 1, GL_FALSE, glm::value_ptr(modelView));
 
@@ -581,7 +563,7 @@ int main() {
         renderEditorAxes(editorWindow, editorAxisShaderProgram, editorAxisVAO, editorAxisVBO);
         renderEditorVertices(editorWindow, editorVertexShaderProgram,
                              editorVertexVAO, editorVertexVBO,
-                             editorVertices, editorVertexInsertionOrder,
+                             editorVertices,
                              shouldRemoveLastVertex,
                              shouldClearAllVertices,
                              editorWindowSize);
