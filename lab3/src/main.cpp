@@ -3,6 +3,8 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
+#include "scene.h"
+
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 
 int main() {
@@ -33,7 +35,7 @@ int main() {
         // TODO: input
         
         glClear(GL_COLOR_BUFFER_BIT);
-        // TODO: render
+        render();
         
         glfwSwapBuffers(window);
         glfwPollEvents();
