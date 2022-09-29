@@ -18,13 +18,7 @@ void render(const RenderObject& renderObject, const GLuint shaderProgram) {
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
-const RenderObject buildRenderObject() {
-    const std::array<glm::vec3, 3> vertices{ // TODO: input para
-            glm::vec3{-0.5f, -0.5f, 0.0f},
-            glm::vec3{0.5f, -0.5f, 0.0f},
-            glm::vec3{ 0.0f,  0.5f, 0.0f}
-    };
-
+const RenderObject buildRenderObject(const std::array<glm::vec3, 3>& vertices) {
     // TODO: Use glIsBuffer to check if we need to delete the VAO and VBO
     // TODO: Move buildScene into render
 
@@ -78,6 +72,23 @@ const auto createTriangleShaderProgram() {
         "out vec4 FragColor;\n"
         "void main() {\n"
         "  FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+        "}";
+
+    return createShaderProgram(&vertexShaderSrc, &fragmentShaderSrc);
+}
+
+const auto createTriangle2ShaderProgram() {
+    const auto vertexShaderSrc = "#version 330 core\n"
+        "layout (location = 0) in vec3 aPos;\n"
+        "void main()\n"
+        "{\n"
+        "  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+        "}\0";
+
+    const auto fragmentShaderSrc = "#version 330 core\n"
+        "out vec4 FragColor;\n"
+        "void main() {\n"
+        "  FragColor = vec4(1.0f, 0.5f, 0.5f, 1.0f);\n"
         "}";
 
     return createShaderProgram(&vertexShaderSrc, &fragmentShaderSrc);
