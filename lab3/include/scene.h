@@ -13,12 +13,12 @@ private:
     const TriangleComponent triangleComponent2{};
 
 public:
-    void render(const std::array<glm::vec3, 3>& vertices,
+    void render(const float& data,
                 const GLuint shaderProgram,
-                const std::array<glm::vec3, 3>& vertices2,
+                const float& data2,
                 const GLuint shaderProgram2) const {
-        triangleComponent1.render(vertices, shaderProgram);
-        triangleComponent2.render(vertices2, shaderProgram2);
+        triangleComponent1.render(data, shaderProgram);
+        triangleComponent2.render(data2, shaderProgram2);
     }
 };
 

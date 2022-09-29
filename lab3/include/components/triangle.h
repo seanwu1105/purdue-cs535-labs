@@ -10,9 +10,9 @@ class TriangleComponent {
 private:
     mutable GLuint VAO{};
     mutable GLuint VBO{};
-    mutable std::array<glm::vec3, 3> prev_vertices{};
+    mutable float prev_data{};
 
-    void buildVAO(const std::array<glm::vec3, 3>& vertices) const {
+    void buildVAO(const float& k) const {
         if (glIsBuffer(VBO) == GL_TRUE) glDeleteBuffers(1, &VBO);
         if (glIsVertexArray(VAO) == GL_TRUE) glDeleteVertexArrays(1, &VAO);
 
@@ -22,6 +22,11 @@ private:
         glGenBuffers(1, &VBO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
+        const std::array<glm::vec3, 3> vertices{
+            glm::vec3{-k, -k, 0.0f},
+            glm::vec3{k, -k, 0.0f},
+            glm::vec3{ 0.0f,  k, 0.0f}
+        };
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
                      vertices.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
@@ -31,11 +36,10 @@ private:
     }
 
 public:
-    void render(const std::array<glm::vec3, 3>& vertices,
-                const GLuint shaderProgram) const {
-        if (vertices != prev_vertices) {
-            buildVAO(vertices);
-            prev_vertices = vertices;
+    void render(const float& data, const GLuint shaderProgram) const {
+        if (data != prev_data) {
+            buildVAO(data);
+            prev_data = data;
         }
 
         glBindVertexArray(VAO);
