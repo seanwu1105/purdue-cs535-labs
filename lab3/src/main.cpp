@@ -3,21 +3,18 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
+#include "raii-glfw.h"
 #include "scene.h"
 #include "shader.h"
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 
 int main() {
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    const RaiiGlfw raiiGlfw{};
 
     GLFWwindow* window = glfwCreateWindow(800, 600, "Lab 3", NULL, NULL);
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
         return -1;
     }
     glfwMakeContextCurrent(window);
@@ -46,8 +43,6 @@ int main() {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    glfwTerminate(); // TODO: use finally to release resources
 
     return 0;
 }

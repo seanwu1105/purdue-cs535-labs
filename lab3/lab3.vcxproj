@@ -146,6 +146,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\components\triangle.h" />
+    <ClInclude Include="include\raii-glfw.h" />
     <ClInclude Include="include\scene.h" />
     <ClInclude Include="include\shader.h" />
   </ItemGroup>
