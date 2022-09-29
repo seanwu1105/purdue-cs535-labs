@@ -5,39 +5,22 @@
 #include "glad/glad.h"
 #include "glm/gtc/type_ptr.hpp"
 
-void render(const GLuint VAO, const GLuint shaderProgram) {
-    glBindVertexArray(VAO);
-    glUseProgram(shaderProgram);
+#include "components/triangle.h"
 
-    const auto rotateOffset{ (float)glfwGetTime() * 100 };
-    const auto trans{ glm::rotate(glm::mat4(1.0f), glm::radians(rotateOffset),
-                                  glm::vec3(0.0, 1.0, 1.0)) };
-    const auto transLoc{ glGetUniformLocation(shaderProgram, "trans") };
-    glUniformMatrix4fv(transLoc, 1, GL_FALSE, glm::value_ptr(trans));
+class Scene {
+private:
+    const TriangleComponent triangleComponent1{};
+    const TriangleComponent triangleComponent2{};
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-}
-
-const GLuint buildRenderObject(const std::array<glm::vec3, 3>& vertices) {
-    // TODO: Use glIsBuffer to check if we need to delete the VAO and VBO
-    // TODO: Move buildScene into render
-
-    GLuint VAO{};
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    GLuint VBO{};
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
-                 vertices.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-                          (void*)0);
-    glEnableVertexAttribArray(0);
-
-    return VAO;
-}
+public:
+    void render(const std::array<glm::vec3, 3>& vertices,
+                const GLuint shaderProgram,
+                const std::array<glm::vec3, 3>& vertices2,
+                const GLuint shaderProgram2) const {
+        triangleComponent1.render(vertices, shaderProgram);
+        triangleComponent2.render(vertices2, shaderProgram2);
+    }
+};
 
 const GLuint createShaderProgram(const GLchar* const* vertexShaderSrc, const GLchar* const* fragmentShaderSrc) {
     // TODO: Use memorization.

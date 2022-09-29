@@ -36,7 +36,6 @@ int main() {
             glm::vec3{0.5f, -0.5f, 0.0f},
             glm::vec3{ 0.0f,  0.5f, 0.0f}
     };
-    const auto VAO = buildRenderObject(vertices);
     const auto shaderProgram = createTriangleShaderProgram();
 
     const std::array<glm::vec3, 3> vertices2{
@@ -44,15 +43,15 @@ int main() {
             glm::vec3{0.3f, -0.6f, 0.0f},
             glm::vec3{ 0.4f,  0.4f, 0.0f}
     };
-    const auto VAO2 = buildRenderObject(vertices2);
     const auto shaderProgram2 = createTriangle2ShaderProgram();
+
+    const Scene scene{};
 
     while (!glfwWindowShouldClose(window)) {
         // TODO: input
 
         glClear(GL_COLOR_BUFFER_BIT);
-        render(VAO, shaderProgram);
-        render(VAO2, shaderProgram2);
+        scene.render(vertices, shaderProgram, vertices2, shaderProgram2);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
