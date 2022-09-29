@@ -9,17 +9,16 @@
 
 class Scene {
 private:
-    const TriangleComponent triangleComponent1{};
-    const TriangleComponent triangleComponent2{};
+    const TriangleComponent triangleComponent1{ {
+        {"triangle.vert", GL_VERTEX_SHADER},
+        {"triangle.frag", GL_FRAGMENT_SHADER} } };
+    const TriangleComponent triangleComponent2{ {
+        {"triangle.vert", GL_VERTEX_SHADER},
+        {"triangle2.frag", GL_FRAGMENT_SHADER} } };
 
 public:
-    void render(
-        const float& data,
-        const GLuint shaderProgram,
-        const float& data2,
-        const GLuint shaderProgram2
-    ) const {
-        triangleComponent1.render(data, shaderProgram);
-        triangleComponent2.render(data2, shaderProgram2);
+    void render(const float& data, const float& data2) const {
+        triangleComponent1.render(data);
+        triangleComponent2.render(data2);
     }
 };

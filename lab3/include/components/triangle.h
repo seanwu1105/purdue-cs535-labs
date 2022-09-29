@@ -6,11 +6,14 @@
 #include "GLFW/glfw3.h"
 #include "glm/gtc/type_ptr.hpp"
 
+#include "shader.h"
+
 class TriangleComponent {
 private:
+    mutable float prev_data{};
     mutable GLuint VAO{};
     mutable GLuint VBO{};
-    mutable float prev_data{};
+    const GLuint shaderProgram{};
 
     void buildVAO(const float& k) const {
         if (glIsBuffer(VBO) == GL_TRUE) glDeleteBuffers(1, &VBO);
@@ -36,7 +39,13 @@ private:
     }
 
 public:
-    void render(const float& data, const GLuint shaderProgram) const {
+    // No need to specify the shader program in the constructor if there is no
+    // reusability.
+    TriangleComponent(
+        const std::unordered_map<std::string, GLenum> shaderFiles
+    ) : shaderProgram{ buildShaderProgram(shaderFiles) } {}
+
+    void render(const float& data) const {
         if (data != prev_data) {
             buildVAO(data);
             prev_data = data;

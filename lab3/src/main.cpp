@@ -33,14 +33,7 @@ int main() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
     const float k{ 0.5f };
-    const auto shaderProgram = buildShaderProgram({
-        {"triangle.vert", GL_VERTEX_SHADER},
-        {"triangle.frag", GL_FRAGMENT_SHADER} });
-
     const float k2{ 0.3f };
-    const auto shaderProgram2 = buildShaderProgram({
-        {"triangle.vert", GL_VERTEX_SHADER},
-        {"triangle2.frag", GL_FRAGMENT_SHADER} });
 
     const Scene scene{};
 
@@ -48,7 +41,7 @@ int main() {
         // TODO: input
 
         glClear(GL_COLOR_BUFFER_BIT);
-        scene.render(k, shaderProgram, k2, shaderProgram2);
+        scene.render(k, k2);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
