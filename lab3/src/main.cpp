@@ -4,6 +4,7 @@
 #include "GLFW/glfw3.h"
 
 #include "scene.h"
+#include "shader.h"
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 
@@ -32,10 +33,14 @@ int main() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
     const float k{ 0.5f };
-    const auto shaderProgram = createTriangleShaderProgram();
+    const auto shaderProgram = buildShaderProgram({
+        {"triangle.vert", GL_VERTEX_SHADER},
+        {"triangle.frag", GL_FRAGMENT_SHADER} });
 
     const float k2{ 0.3f };
-    const auto shaderProgram2 = createTriangle2ShaderProgram();
+    const auto shaderProgram2 = buildShaderProgram({
+        {"triangle.vert", GL_VERTEX_SHADER},
+        {"triangle2.frag", GL_FRAGMENT_SHADER} });
 
     const Scene scene{};
 
@@ -49,7 +54,7 @@ int main() {
         glfwPollEvents();
     }
 
-    glfwTerminate();
+    glfwTerminate(); // TODO: use finally to release resources
 
     return 0;
 }
