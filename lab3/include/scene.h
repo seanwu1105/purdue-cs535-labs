@@ -5,14 +5,8 @@
 #include "glad/glad.h"
 #include "glm/gtc/type_ptr.hpp"
 
-struct RenderObject {
-    const GLuint VAO;
-    const GLuint VBO; // May be unnecessary.
-};
-
-void render(const RenderObject& renderObject, const GLuint shaderProgram) {
-    glBindVertexArray(renderObject.VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, renderObject.VBO); // May be unnecessary.
+void render(const GLuint VAO, const GLuint shaderProgram) {
+    glBindVertexArray(VAO);
     glUseProgram(shaderProgram);
 
     const auto rotateOffset{ (float)glfwGetTime() * 100 };
@@ -24,7 +18,7 @@ void render(const RenderObject& renderObject, const GLuint shaderProgram) {
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
-const RenderObject buildRenderObject(const std::array<glm::vec3, 3>& vertices) {
+const GLuint buildRenderObject(const std::array<glm::vec3, 3>& vertices) {
     // TODO: Use glIsBuffer to check if we need to delete the VAO and VBO
     // TODO: Move buildScene into render
 
@@ -42,7 +36,7 @@ const RenderObject buildRenderObject(const std::array<glm::vec3, 3>& vertices) {
                           (void*)0);
     glEnableVertexAttribArray(0);
 
-    return { VAO, VBO };
+    return VAO;
 }
 
 const GLuint createShaderProgram(const GLchar* const* vertexShaderSrc, const GLchar* const* fragmentShaderSrc) {
