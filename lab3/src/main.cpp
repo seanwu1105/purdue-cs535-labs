@@ -31,12 +31,15 @@ int main() {
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
+    const auto renderObject = buildRenderObject();
+    const auto shaderProgram = createTriangleShaderProgram();
+
     while (!glfwWindowShouldClose(window)) {
         // TODO: input
-        
+
         glClear(GL_COLOR_BUFFER_BIT);
-        render();
-        
+        render(renderObject, shaderProgram);
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
