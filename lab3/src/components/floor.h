@@ -16,7 +16,7 @@ private:
     mutable GLuint VBO{};
     const GLuint shaderProgram{ buildShaderProgram({
         {"default.vert", GL_VERTEX_SHADER},
-        {"floor.frag", GL_FRAGMENT_SHADER} }) };
+        {"default.frag", GL_FRAGMENT_SHADER} }) };
 
     const GLuint buildVAO() const {
         if (glIsBuffer(VBO) == GL_TRUE) glDeleteBuffers(1, &VBO);
@@ -63,6 +63,7 @@ public:
         setUniformToProgram(shaderProgram, "model", model);
         setUniformToProgram(shaderProgram, "view", view);
         setUniformToProgram(shaderProgram, "projection", projection);
+        setUniformToProgram(shaderProgram, "color", glm::vec4(0.6f));
     }
 
     void render() const {

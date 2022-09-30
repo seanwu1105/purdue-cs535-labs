@@ -154,10 +154,8 @@
     <ClInclude Include="src\utils.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\shaders\axes.frag" />
+    <None Include="src\shaders\default.frag" />
     <None Include="src\shaders\default.vert" />
-    <None Include="src\shaders\floor.frag" />
-    <None Include="src\shaders\triangle.frag" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

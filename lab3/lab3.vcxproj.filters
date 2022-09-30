@@ -52,16 +52,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\shaders\triangle.frag">
-      <Filter>Source Files\shaders</Filter>
-    </None>
-    <None Include="src\shaders\floor.frag">
-      <Filter>Source Files\shaders</Filter>
-    </None>
     <None Include="src\shaders\default.vert">
       <Filter>Source Files\shaders</Filter>
     </None>
-    <None Include="src\shaders\axes.frag">
+    <None Include="src\shaders\default.frag">
       <Filter>Source Files\shaders</Filter>
     </None>
   </ItemGroup>

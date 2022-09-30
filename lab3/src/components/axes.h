@@ -23,7 +23,7 @@ private:
     mutable GLuint VBO{};
     const GLuint shaderProgram{ buildShaderProgram({
         {"default.vert", GL_VERTEX_SHADER},
-        {"axes.frag", GL_FRAGMENT_SHADER} }) };
+        {"default.frag", GL_FRAGMENT_SHADER} }) };
 
     const GLuint buildVAO() const {
         if (glIsBuffer(VBO) == GL_TRUE) glDeleteBuffers(1, &VBO);
@@ -61,15 +61,15 @@ public:
         glBindVertexArray(VAO);
         glUseProgram(shaderProgram);
 
-        setUniformToProgram(shaderProgram, "iColor",
+        setUniformToProgram(shaderProgram, "color",
                             glm::vec4{ 1.0, 0.0, 0.0, 1.0 });
         glDrawArrays(GL_LINES, 0, 2);
 
-        setUniformToProgram(shaderProgram, "iColor",
+        setUniformToProgram(shaderProgram, "color",
                             glm::vec4{ 0.0, 1.0, 0.0, 1.0 });
         glDrawArrays(GL_LINES, 2, 2);
 
-        setUniformToProgram(shaderProgram, "iColor",
+        setUniformToProgram(shaderProgram, "color",
                             glm::vec4{ 0.0, 0.0, 1.0, 1.0 });
         glDrawArrays(GL_LINES, 4, 2);
     }
