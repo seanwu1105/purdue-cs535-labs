@@ -41,13 +41,16 @@
     <ClInclude Include="src\raii-glfw.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\components\floor.h">
+    <ClInclude Include="src\components\grid.h">
       <Filter>Header Files\components</Filter>
     </ClInclude>
     <ClInclude Include="src\utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\components\axes.h">
+      <Filter>Header Files\components</Filter>
+    </ClInclude>
+    <ClInclude Include="src\components\floor.h">
       <Filter>Header Files\components</Filter>
     </ClInclude>
   </ItemGroup>

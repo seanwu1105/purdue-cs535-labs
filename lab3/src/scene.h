@@ -6,6 +6,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "components/axes.h"
+#include "components/grid.h"
 #include "components/triangle.h"
 #include "components/floor.h"
 
@@ -16,13 +17,15 @@ private:
                                                   0.1f, 100.0f) };
 
     const AxesComponent axesComponent{ projection };
+    const GridComponent gridComponent{ projection };
     const TriangleComponent triangleComponent{ projection };
     const FloorComponent floorComponent{ projection };
 
 public:
     void render(const float& data, const float& data2) const {
         axesComponent.render();
+        gridComponent.render();
         triangleComponent.render(data);
-        floorComponent.render();
+        // floorComponent.render();
     }
 };

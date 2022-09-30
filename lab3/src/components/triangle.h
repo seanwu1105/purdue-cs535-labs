@@ -61,7 +61,7 @@ public:
         const auto rotateOffset{ (float)glfwGetTime() * 100 };
         const auto model{ glm::rotate(glm::mat4(1.0f),
                                       glm::radians(rotateOffset),
-                                      glm::vec3(0.0, 1.0, 1.0)) };
+                                      glm::vec3(1.0, 1.0, 1.0)) };
         setUniformToProgram(shaderProgram, "model", model);
 
         glDrawArrays(GL_TRIANGLES, 0, 3);

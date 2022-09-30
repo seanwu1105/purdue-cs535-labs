@@ -9,9 +9,11 @@
 #include "shader.h"
 #include "utils.h"
 
+const std::vector<glm::vec3> tessellate(const GLsizei& divisionCount);
+
 class FloorComponent {
 private:
-    const GLsizei gridCount{ 20 };
+    const GLsizei divisionCount{ 20 };
     mutable GLuint VAO{ buildVAO() };
     mutable GLuint VBO{};
     const GLuint shaderProgram{ buildShaderProgram({
@@ -28,18 +30,7 @@ private:
         glGenBuffers(1, &VBO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-        const auto gridMin{ -1.0f };
-        const auto gridMax{ 1.0f };
-        const auto divisionSize{ std::abs(gridMax - gridMin) / gridCount };
-        std::vector<glm::vec3> vertices{};
-        for (size_t i = 0; i <= gridCount; i++) {
-            vertices.push_back({ gridMin + divisionSize * i, gridMin, 0.0f });
-            vertices.push_back({ gridMin + divisionSize * i, gridMax, 0.0f });
-        }
-        for (size_t i = 0; i <= gridCount; i++) {
-            vertices.push_back({ gridMin, gridMin + divisionSize * i, 0.0f });
-            vertices.push_back({ gridMax, gridMin + divisionSize * i, 0.0f });
-        }
+        const auto vertices = tessellate(divisionCount);
 
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
                      vertices.data(), GL_STATIC_DRAW);
@@ -63,14 +54,67 @@ public:
         setUniformToProgram(shaderProgram, "model", model);
         setUniformToProgram(shaderProgram, "view", view);
         setUniformToProgram(shaderProgram, "projection", projection);
-        setUniformToProgram(shaderProgram, "color", glm::vec4(0.6f));
+        setUniformToProgram(shaderProgram, "color", glm::vec4(0.7f));
     }
 
     void render() const {
         glBindVertexArray(VAO);
         glUseProgram(shaderProgram);
 
-        glDrawArrays(GL_LINES, 0, (gridCount + 1) * 2);
-        glDrawArrays(GL_LINES, (gridCount + 1) * 2, (gridCount + 1) * 2);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, divisionCount * divisionCount * 6);
     }
 };
+
+const std::vector<glm::vec3> tessellate(const GLsizei& divisionCount) {
+    const auto rangeMin{ -1.0f };
+    const auto rangeMax{ 1.0f };
+    const auto divisionSize{ std::abs(rangeMax - rangeMin) / divisionCount };
+    std::vector<glm::vec3> vertices{};
+    for (size_t i = 0; i < divisionCount; i+=2) {
+        for (size_t j = 0; j < divisionCount; j++) {
+            vertices.push_back({ rangeMin + i * divisionSize,
+                                 rangeMin + j * divisionSize,
+                                 0.0 });
+            vertices.push_back({ rangeMin + (i + 1) * divisionSize,
+                                 rangeMin + j * divisionSize,
+                                 0.0 });
+            vertices.push_back({ rangeMin + (i + 1) * divisionSize,
+                                 rangeMin + (j + 1) * divisionSize,
+                                 0.0 });
+            vertices.push_back({ rangeMin + i * divisionSize,
+                                 rangeMin + j * divisionSize,
+                                 0.0 });
+            vertices.push_back({ rangeMin + (i + 1) * divisionSize,
+                                 rangeMin + (j + 1) * divisionSize,
+                                 0.0 });
+            vertices.push_back({ rangeMin + i * divisionSize,
+                                 rangeMin + (j + 1) * divisionSize,
+                                 0.0 });
+        }
+        
+        const auto k = i + 1;
+
+        for (int j = divisionCount - 1; j >= 0; j--) {
+            vertices.push_back({ rangeMin + k * divisionSize,
+                                 rangeMin + j * divisionSize,
+                                 0.0 });
+            vertices.push_back({ rangeMin + k * divisionSize,
+                                 rangeMin + (j + 1) * divisionSize,
+                                 0.0 });
+            vertices.push_back({ rangeMin + (k + 1) * divisionSize,
+                                 rangeMin + (j + 1) * divisionSize,
+                                 0.0 });
+            vertices.push_back({ rangeMin + k * divisionSize,
+                                 rangeMin + j * divisionSize,
+                                 0.0 });
+            vertices.push_back({ rangeMin + (k + 1) * divisionSize,
+                                 rangeMin + (j + 1) * divisionSize,
+                                 0.0 });
+            vertices.push_back({ rangeMin + (k + 1) * divisionSize,
+                                 rangeMin + j * divisionSize,
+                                 0.0 });
+        }
+    }
+
+    return vertices;
+}
