@@ -27,6 +27,7 @@ int main() {
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glEnable(GL_DEPTH_TEST);
 
     const float k{ 0.5f };
     const float k2{ 0.3f };
@@ -36,7 +37,7 @@ int main() {
     while (!glfwWindowShouldClose(window)) {
         // TODO: input
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         scene.render(k, k2);
 
         glfwSwapBuffers(window);

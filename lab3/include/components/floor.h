@@ -12,7 +12,7 @@
 
 class FloorComponent {
 private:
-    const GLsizei gridCount{50};
+    const GLsizei gridCount{ 20 };
     mutable GLuint VAO{ buildVAO() };
     mutable GLuint VBO{};
     const GLuint shaderProgram{ buildShaderProgram({
@@ -62,9 +62,9 @@ public:
 
         model = glm::rotate(model, glm::radians(-90.0f),
                             glm::vec3{ 1.0, 0.0, 0.0 });
-        view = glm::translate(view, glm::vec3{ 0.0f, -0.5f, -2.0f });
+        view = glm::translate(view, glm::vec3{ 0.0, -0.5, -3.0 });
         projection = glm::perspective(glm::radians(45.0f),
-                                      getViewAspectRatio(), 0.0f, 100.0f);
+                                      getViewAspectRatio(), 0.1f, 100.0f);
 
         setUniformToProgram(shaderProgram, "model", model);
         setUniformToProgram(shaderProgram, "view", view);

@@ -20,8 +20,8 @@ private:
 
 public:
     void render(const float& data, const float& data2) const {
-        triangleComponent1.render(data);
-        triangleComponent2.render(data2);
+        //triangleComponent1.render(data);
+        //triangleComponent2.render(data2);
         floorComponent.render();
     }
 };
