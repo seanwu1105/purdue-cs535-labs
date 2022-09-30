@@ -150,6 +150,7 @@
     <ClInclude Include="include\raii-glfw.h" />
     <ClInclude Include="include\scene.h" />
     <ClInclude Include="include\shader.h" />
+    <ClInclude Include="include\utils.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shaders\floor.frag" />

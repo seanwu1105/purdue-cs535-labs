@@ -7,6 +7,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "shader.h"
+#include "utils.h"
 
 class FloorComponent {
 private:
@@ -48,15 +49,24 @@ public:
         glUseProgram(shaderProgram);
 
         auto model{ glm::mat4(1.0) };
-        model = glm::rotate(model, glm::radians(45.0f),
+        auto view{ glm::mat4(1.0) };
+        auto projection{ glm::mat4(1.0) };
+
+        model = glm::rotate(model, glm::radians(-90.0f),
                             glm::vec3{ 1.0, 0.0, 0.0 });
+        view = glm::translate(view, glm::vec3{ 0.0f, -0.5f, -2.0f });
+        projection = glm::perspective(glm::radians(45.0f),
+                                      getViewAspectRatio(), 0.0f, 100.0f);
+
         setUniformToProgram(shaderProgram, "model", model);
+        setUniformToProgram(shaderProgram, "view", view);
+        setUniformToProgram(shaderProgram, "projection", projection);
     }
 
     void render() const {
         glBindVertexArray(VAO);
         glUseProgram(shaderProgram);
 
-        glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)vertices.size());
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, (GLsizei)vertices.size());
     }
 };
