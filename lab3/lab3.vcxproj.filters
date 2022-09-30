@@ -41,6 +41,9 @@
     <ClInclude Include="include\raii-glfw.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\components\floor.h">
+      <Filter>Header Files\components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shaders\triangle.vert">
@@ -50,6 +53,12 @@
       <Filter>Source Files\shaders</Filter>
     </None>
     <None Include="src\shaders\triangle2.frag">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="src\shaders\floor.vert">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="src\shaders\floor.frag">
       <Filter>Source Files\shaders</Filter>
     </None>
   </ItemGroup>

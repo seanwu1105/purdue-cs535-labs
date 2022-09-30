@@ -4,9 +4,9 @@
 #include <fstream>
 #include <unordered_map>
 
-#include "glad/glad.h"
+#include <glad/glad.h>
 
-const std::string readFile(const std::string& filename);
+const std::string _readShaderSourceFile(const std::string& filename);
 
 const GLuint buildShaderProgram(
     const std::unordered_map<std::string, GLenum>& sourceFiles
@@ -14,7 +14,7 @@ const GLuint buildShaderProgram(
     const auto shaderProgram{ glCreateProgram() };
     for (const auto& [sourceFile, shaderType] : sourceFiles) {
         const auto shader{ glCreateShader(shaderType) };
-        const auto source = readFile(sourceFile);
+        const auto source = _readShaderSourceFile(sourceFile);
         const auto sourceCStr = source.c_str();
         glShaderSource(shader, 1, &sourceCStr, nullptr);
 
@@ -46,7 +46,7 @@ const GLuint buildShaderProgram(
     return shaderProgram;
 }
 
-const std::string readFile(const std::string& filename) {
+const std::string _readShaderSourceFile(const std::string& filename) {
     const auto sourcePath = std::filesystem::path("src") / "shaders";
     std::ifstream shaderFile(sourcePath / filename);
     if (!shaderFile.is_open())
@@ -57,3 +57,5 @@ const std::string readFile(const std::string& filename) {
     buffer << shaderFile.rdbuf();
     return buffer.str();
 }
+
+// TODO: Add helper function to set uniform values.

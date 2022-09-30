@@ -145,12 +145,15 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\components\floor.h" />
     <ClInclude Include="include\components\triangle.h" />
     <ClInclude Include="include\raii-glfw.h" />
     <ClInclude Include="include\scene.h" />
     <ClInclude Include="include\shader.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="src\shaders\floor.frag" />
+    <None Include="src\shaders\floor.vert" />
     <None Include="src\shaders\triangle.frag" />
     <None Include="src\shaders\triangle.vert" />
     <None Include="src\shaders\triangle2.frag" />
