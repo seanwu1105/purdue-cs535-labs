@@ -50,14 +50,13 @@ public:
         auto model{ glm::mat4(1.0) };
         model = glm::rotate(model, glm::radians(45.0f),
                             glm::vec3{ 1.0, 0.0, 0.0 });
-        const auto modelLoc = glGetUniformLocation(shaderProgram, "model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        setUniformToProgram(shaderProgram, "model", model);
     }
 
     void render() const {
         glBindVertexArray(VAO);
         glUseProgram(shaderProgram);
 
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, (GLsizei)vertices.size());
+        glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)vertices.size());
     }
 };

@@ -58,8 +58,7 @@ public:
         const auto trans{ glm::rotate(glm::mat4(1.0f),
                                       glm::radians(rotateOffset),
                                       glm::vec3(0.0, 1.0, 1.0)) };
-        const auto transLoc{ glGetUniformLocation(shaderProgram, "trans") };
-        glUniformMatrix4fv(transLoc, 1, GL_FALSE, glm::value_ptr(trans));
+        setUniformToProgram(shaderProgram, "trans", trans);
 
         glDrawArrays(GL_TRIANGLES, 0, 3);
     }
