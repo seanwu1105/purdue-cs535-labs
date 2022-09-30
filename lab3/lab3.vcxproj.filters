@@ -47,21 +47,21 @@
     <ClInclude Include="src\utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\components\axes.h">
+      <Filter>Header Files\components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\shaders\triangle.vert">
-      <Filter>Source Files\shaders</Filter>
-    </None>
     <None Include="src\shaders\triangle.frag">
       <Filter>Source Files\shaders</Filter>
     </None>
-    <None Include="src\shaders\triangle2.frag">
-      <Filter>Source Files\shaders</Filter>
-    </None>
-    <None Include="src\shaders\floor.vert">
-      <Filter>Source Files\shaders</Filter>
-    </None>
     <None Include="src\shaders\floor.frag">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="src\shaders\default.vert">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="src\shaders\axes.frag">
       <Filter>Source Files\shaders</Filter>
     </None>
   </ItemGroup>

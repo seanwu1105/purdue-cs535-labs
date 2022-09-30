@@ -5,23 +5,24 @@
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "components/axes.h"
 #include "components/triangle.h"
 #include "components/floor.h"
 
 class Scene {
 private:
-    const TriangleComponent triangleComponent1{ {
-        {"triangle.vert", GL_VERTEX_SHADER},
-        {"triangle.frag", GL_FRAGMENT_SHADER} } };
-    const TriangleComponent triangleComponent2{ {
-        {"triangle.vert", GL_VERTEX_SHADER},
-        {"triangle2.frag", GL_FRAGMENT_SHADER} } };
-    const FloorComponent floorComponent{};
+    const glm::mat4 projection{ glm::perspective(glm::radians(45.0f),
+                                                  getViewAspectRatio(),
+                                                  0.1f, 100.0f) };
+
+    const AxesComponent axesComponent{ projection };
+    const TriangleComponent triangleComponent{ projection };
+    const FloorComponent floorComponent{ projection };
 
 public:
     void render(const float& data, const float& data2) const {
-        //triangleComponent1.render(data);
-        //triangleComponent2.render(data2);
+        axesComponent.render();
+        triangleComponent.render(data);
         floorComponent.render();
     }
 };

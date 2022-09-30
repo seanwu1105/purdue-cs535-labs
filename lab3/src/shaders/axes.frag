@@ -2,6 +2,8 @@
 
 out vec4 oColor;
 
+uniform vec4 iColor;
+
 void main() {
-  oColor = vec4(1.0f, 0.5f, 0.5f, 1.0f);
+  oColor = iColor;
 }

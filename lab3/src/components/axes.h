@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cmath>
+#include <array>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -9,14 +9,21 @@
 #include "shader.h"
 #include "utils.h"
 
-class FloorComponent {
+class AxesComponent {
 private:
-    const GLsizei gridCount{ 20 };
+    const std::array<glm::vec3, 6> vertices{
+        glm::vec3{-1, 0, 0},
+        glm::vec3{1, 0, 0},
+        glm::vec3{0, -1, 0},
+        glm::vec3{0, 1, 0},
+        glm::vec3{0, 0, -1},
+        glm::vec3{0, 0, 1}
+    };
     mutable GLuint VAO{ buildVAO() };
     mutable GLuint VBO{};
     const GLuint shaderProgram{ buildShaderProgram({
         {"default.vert", GL_VERTEX_SHADER},
-        {"floor.frag", GL_FRAGMENT_SHADER} }) };
+        {"axes.frag", GL_FRAGMENT_SHADER} }) };
 
     const GLuint buildVAO() const {
         if (glIsBuffer(VBO) == GL_TRUE) glDeleteBuffers(1, &VBO);
@@ -27,19 +34,6 @@ private:
 
         glGenBuffers(1, &VBO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-        const auto gridMin{ -1.0f };
-        const auto gridMax{ 1.0f };
-        const auto divisionSize{ std::abs(gridMax - gridMin) / gridCount };
-        std::vector<glm::vec3> vertices{};
-        for (size_t i = 0; i <= gridCount; i++) {
-            vertices.push_back({ gridMin + divisionSize * i, gridMin, 0.0f });
-            vertices.push_back({ gridMin + divisionSize * i, gridMax, 0.0f });
-        }
-        for (size_t i = 0; i <= gridCount; i++) {
-            vertices.push_back({ gridMin, gridMin + divisionSize * i, 0.0f });
-            vertices.push_back({ gridMax, gridMin + divisionSize * i, 0.0f });
-        }
 
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
                      vertices.data(), GL_STATIC_DRAW);
@@ -52,12 +46,10 @@ private:
     }
 
 public:
-    FloorComponent(const glm::mat4 projection) {
+    AxesComponent(const glm::mat4 projection) {
         auto model{ glm::mat4(1.0) };
         auto view{ glm::mat4(1.0) };
 
-        model = glm::rotate(model, glm::radians(-90.0f),
-                            glm::vec3{ 1.0, 0.0, 0.0 });
         view = glm::translate(view, glm::vec3{ 0.0, -0.5, -3.0 });
 
         setUniformToProgram(shaderProgram, "model", model);
@@ -69,7 +61,16 @@ public:
         glBindVertexArray(VAO);
         glUseProgram(shaderProgram);
 
-        glDrawArrays(GL_LINES, 0, (gridCount + 1) * 2);
-        glDrawArrays(GL_LINES, (gridCount + 1) * 2, (gridCount + 1) * 2);
+        setUniformToProgram(shaderProgram, "iColor",
+                            glm::vec4{ 1.0, 0.0, 0.0, 1.0 });
+        glDrawArrays(GL_LINES, 0, 2);
+
+        setUniformToProgram(shaderProgram, "iColor",
+                            glm::vec4{ 0.0, 1.0, 0.0, 1.0 });
+        glDrawArrays(GL_LINES, 2, 2);
+
+        setUniformToProgram(shaderProgram, "iColor",
+                            glm::vec4{ 0.0, 0.0, 1.0, 1.0 });
+        glDrawArrays(GL_LINES, 4, 2);
     }
 };

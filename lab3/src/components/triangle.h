@@ -13,7 +13,9 @@ private:
     mutable float prev_data{};
     mutable GLuint VAO{};
     mutable GLuint VBO{};
-    const GLuint shaderProgram{};
+    const GLuint shaderProgram{ buildShaderProgram({
+        {"default.vert", GL_VERTEX_SHADER},
+        {"triangle.frag", GL_FRAGMENT_SHADER} }) };
 
     void buildVAO(const float& k) const {
         if (glIsBuffer(VBO) == GL_TRUE) glDeleteBuffers(1, &VBO);
@@ -39,11 +41,13 @@ private:
     }
 
 public:
-    // No need to specify the shader program in the constructor if there is no
-    // reusability.
-    TriangleComponent(
-        const std::unordered_map<std::string, GLenum> shaderFiles
-    ) : shaderProgram{ buildShaderProgram(shaderFiles) } {}
+    TriangleComponent(const glm::mat4 projection) {
+        auto view{ glm::mat4(1.0) };
+
+        view = glm::translate(view, glm::vec3{ 0.0, -0.5, -3.0 });
+        setUniformToProgram(shaderProgram, "view", view);
+        setUniformToProgram(shaderProgram, "projection", projection);
+    }
 
     void render(const float& data) const {
         if (data != prev_data) {
@@ -52,13 +56,12 @@ public:
         }
 
         glBindVertexArray(VAO);
-        glUseProgram(shaderProgram);
 
         const auto rotateOffset{ (float)glfwGetTime() * 100 };
-        const auto trans{ glm::rotate(glm::mat4(1.0f),
+        const auto model{ glm::rotate(glm::mat4(1.0f),
                                       glm::radians(rotateOffset),
                                       glm::vec3(0.0, 1.0, 1.0)) };
-        setUniformToProgram(shaderProgram, "trans", trans);
+        setUniformToProgram(shaderProgram, "model", model);
 
         glDrawArrays(GL_TRIANGLES, 0, 3);
     }

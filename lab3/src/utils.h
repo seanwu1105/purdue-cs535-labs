@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+// TODO: Check if this is correct.
 const float getViewAspectRatio() {
     GLint viewport[4]{};
     glGetIntegerv(GL_VIEWPORT, viewport);

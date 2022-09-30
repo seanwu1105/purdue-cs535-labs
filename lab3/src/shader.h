@@ -69,7 +69,15 @@ void _checkShaderLink(const auto shaderProgram) {
 }
 
 void setUniformToProgram(const GLuint& shaderProgram, const std::string& name,
-                      const glm::mat4& mat) {
+                         const glm::mat4& mat) {
+    glUseProgram(shaderProgram);
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, name.c_str()), 1,
                        GL_FALSE, glm::value_ptr(mat));
+}
+
+void setUniformToProgram(const GLuint& shaderProgram, const std::string& name,
+                         const glm::vec4& vec) {
+    glUseProgram(shaderProgram);
+    glUniform4fv(glGetUniformLocation(shaderProgram, name.c_str()), 1,
+                 glm::value_ptr(vec));
 }
