@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cmath>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -11,12 +12,7 @@
 
 class FloorComponent {
 private:
-    const std::array<glm::vec3, 4> vertices{
-            glm::vec3{-1.0, -1.0, 0.0},
-            glm::vec3{-1.0, 1.0, 0.0},
-            glm::vec3{1.0, -1.0, 0.0},
-            glm::vec3{1.0, 1.0, 0.0},
-    };
+    const GLsizei gridCount{50};
     mutable GLuint VAO{ buildVAO() };
     mutable GLuint VBO{};
     const GLuint shaderProgram{ buildShaderProgram({
@@ -33,6 +29,18 @@ private:
         glGenBuffers(1, &VBO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
+        const auto gridMin{ -1.0f };
+        const auto gridMax{ 1.0f };
+        const auto divisionSize{ std::abs(gridMax - gridMin) / gridCount };
+        std::vector<glm::vec3> vertices{};
+        for (size_t i = 0; i <= gridCount; i++) {
+            vertices.push_back({ gridMin + divisionSize * i, gridMin, 0.0f });
+            vertices.push_back({ gridMin + divisionSize * i, gridMax, 0.0f });
+        }
+        for (size_t i = 0; i <= gridCount; i++) {
+            vertices.push_back({ gridMin, gridMin + divisionSize * i, 0.0f });
+            vertices.push_back({ gridMax, gridMin + divisionSize * i, 0.0f });
+        }
 
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
                      vertices.data(), GL_STATIC_DRAW);
@@ -67,6 +75,7 @@ public:
         glBindVertexArray(VAO);
         glUseProgram(shaderProgram);
 
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, (GLsizei)vertices.size());
+        glDrawArrays(GL_LINES, 0, (gridCount + 1) * 2);
+        glDrawArrays(GL_LINES, (gridCount + 1) * 2, (gridCount + 1) * 2);
     }
 };
