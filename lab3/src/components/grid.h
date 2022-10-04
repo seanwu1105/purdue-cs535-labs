@@ -6,8 +6,8 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "shader.h"
-#include "utils.h"
+#include "../shader.h"
+#include "../utils.h"
 
 class GridComponent {
 private:

@@ -6,8 +6,8 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "shader.h"
-#include "utils.h"
+#include "../shader.h"
+#include "../utils.h"
 
 const std::vector<glm::vec3> tessellate(const GLsizei& divisionCount);
 

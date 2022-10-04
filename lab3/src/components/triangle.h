@@ -6,7 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "shader.h"
+#include "../shader.h"
 
 class TriangleComponent {
 private:
