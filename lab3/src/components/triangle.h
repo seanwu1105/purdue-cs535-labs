@@ -43,7 +43,8 @@ private:
 public:
     TriangleComponent(const glm::mat4& projection) {
         setUniformToProgram(shaderProgram, "projection", projection);
-        setUniformToProgram(shaderProgram, "color", glm::vec4{ 0.6, 0.3, 0.4, 1.0 });
+        setUniformToProgram(shaderProgram, "color",
+                            glm::vec4{ 0.6, 0.3, 0.4, 1.0 });
     }
 
     void render(const glm::mat4& view, const float& data) const {

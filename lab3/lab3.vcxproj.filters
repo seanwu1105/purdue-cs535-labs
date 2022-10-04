@@ -53,6 +53,9 @@
     <ClInclude Include="src\components\floor.h">
       <Filter>Header Files\components</Filter>
     </ClInclude>
+    <ClInclude Include="src\components\sphere.h">
+      <Filter>Header Files\components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shaders\default.vert">

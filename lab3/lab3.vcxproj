@@ -147,6 +147,7 @@
   <ItemGroup>
     <ClInclude Include="src\components\axes.h" />
     <ClInclude Include="src\components\grid.h" />
+    <ClInclude Include="src\components\sphere.h" />
     <ClInclude Include="src\components\triangle.h" />
     <ClInclude Include="src\components\floor.h" />
     <ClInclude Include="src\raii-glfw.h" />

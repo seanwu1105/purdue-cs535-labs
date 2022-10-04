@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cmath>
-
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -9,7 +7,7 @@
 #include "../shader.h"
 #include "../utils.h"
 
-const std::vector<glm::vec3> tessellate(const GLsizei& divisionCount);
+const std::vector<glm::vec3> tessellateFloor(const GLsizei& divisionCount);
 
 class FloorComponent {
 private:
@@ -30,7 +28,7 @@ private:
         glGenBuffers(1, &VBO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-        const auto vertices = tessellate(divisionCount);
+        const auto vertices = tessellateFloor(divisionCount);
 
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
                      vertices.data(), GL_STATIC_DRAW);
@@ -63,7 +61,7 @@ public:
     }
 };
 
-const std::vector<glm::vec3> tessellate(const GLsizei& divisionCount) {
+const std::vector<glm::vec3> tessellateFloor(const GLsizei& divisionCount) {
     const auto rangeMin{ -1.0f };
     const auto rangeMax{ 1.0f };
     const auto divisionSize{ std::abs(rangeMax - rangeMin) / divisionCount };

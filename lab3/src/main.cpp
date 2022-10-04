@@ -1,3 +1,6 @@
+#define _USE_MATH_DEFINES
+
+#include <cmath>
 #include <iostream>
 
 #include <glad/glad.h>
@@ -30,7 +33,6 @@ int main() {
     glEnable(GL_DEPTH_TEST);
 
     const float k{ 0.5f };
-    const float k2{ 0.3f };
 
     const Scene scene{};
 
@@ -38,7 +40,7 @@ int main() {
         // TODO: input
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        scene.render(k, k2);
+        scene.render(k);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
