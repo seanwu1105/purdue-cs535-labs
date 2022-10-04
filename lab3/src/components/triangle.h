@@ -41,22 +41,20 @@ private:
     }
 
 public:
-    TriangleComponent(const glm::mat4 projection) {
-        auto view{ glm::mat4(1.0) };
-
-        view = glm::translate(view, glm::vec3{ 0.0, -0.5, -3.0 });
-        setUniformToProgram(shaderProgram, "view", view);
+    TriangleComponent(const glm::mat4& projection) {
         setUniformToProgram(shaderProgram, "projection", projection);
         setUniformToProgram(shaderProgram, "color", glm::vec4{ 0.6, 0.3, 0.4, 1.0 });
     }
 
-    void render(const float& data) const {
+    void render(const glm::mat4& view, const float& data) const {
         if (data != prev_data) {
             buildVAO(data);
             prev_data = data;
         }
 
         glBindVertexArray(VAO);
+        glUseProgram(shaderProgram);
+        setUniformToProgram(shaderProgram, "view", view);
 
         const auto rotateOffset{ (float)glfwGetTime() * 100 };
         const auto model{ glm::rotate(glm::mat4(1.0f),

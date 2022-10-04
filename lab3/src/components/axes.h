@@ -46,20 +46,17 @@ private:
     }
 
 public:
-    AxesComponent(const glm::mat4 projection) {
+    AxesComponent(const glm::mat4& projection) {
         auto model{ glm::mat4(1.0) };
-        auto view{ glm::mat4(1.0) };
-
-        view = glm::translate(view, glm::vec3{ 0.0, -0.5, -3.0 });
 
         setUniformToProgram(shaderProgram, "model", model);
-        setUniformToProgram(shaderProgram, "view", view);
         setUniformToProgram(shaderProgram, "projection", projection);
     }
 
-    void render() const {
+    void render(const glm::mat4& view) const {
         glBindVertexArray(VAO);
         glUseProgram(shaderProgram);
+        setUniformToProgram(shaderProgram, "view", view);
 
         setUniformToProgram(shaderProgram, "color",
                             glm::vec4{ 1.0, 0.0, 0.0, 1.0 });
