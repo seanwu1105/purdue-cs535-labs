@@ -1,3 +1,7 @@
+// TODO: Optimize the code with compiler flags
+// TODO: Reuse shader programs
+// TODO: Reuse VAOs
+
 #define _USE_MATH_DEFINES
 
 #include <cmath>
