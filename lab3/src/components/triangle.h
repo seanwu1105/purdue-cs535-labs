@@ -8,6 +8,38 @@
 
 #include "../shader.h"
 
+class TriangleVaoProvider {
+public:
+    GLuint vao() const {
+        if (glIsVertexArray(_vao) == GL_TRUE) return _vao;
+
+        glGenVertexArrays(1, &_vao);
+        glBindVertexArray(_vao);
+
+        GLuint vbo{};
+        glGenBuffers(1, &vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+        const auto k{ 0.5f };
+        const std::array<glm::vec3, 3> vertices{
+            glm::vec3{-k, -k, 0.0f},
+            glm::vec3{k, -k, 0.0f},
+            glm::vec3{ 0.0f,  k, 0.0f}
+        };
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
+                     vertices.data(), GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+                              static_cast<void*>(0));
+
+        glEnableVertexAttribArray(0);
+
+        return _vao;
+    }
+
+private:
+    mutable GLuint _vao{};
+};
+
 class TriangleComponent {
 public:
     TriangleComponent(const glm::mat4& projection) {
@@ -17,13 +49,8 @@ public:
                             glm::vec4{ 0.6, 0.3, 0.4, 1.0 });
     }
 
-    void render(const glm::mat4& view, const float& data) const {
-        if (data != prev_data) {
-            buildVAO(data);
-            prev_data = data;
-        }
-
-        glBindVertexArray(VAO);
+    void render(const glm::mat4& view) const {
+        glBindVertexArray(vaoProvider.vao());
         glUseProgram(shaderProgramProvider.program());
         setUniformToProgram(shaderProgramProvider.program(), "view", view);
 
@@ -38,30 +65,5 @@ public:
 
 private:
     static inline const DefaultShaderProgramProvider shaderProgramProvider{};
-    mutable float prev_data{};
-    mutable GLuint VAO{};
-    mutable GLuint VBO{};
-
-    void buildVAO(const float& k) const {
-        if (glIsBuffer(VBO) == GL_TRUE) glDeleteBuffers(1, &VBO);
-        if (glIsVertexArray(VAO) == GL_TRUE) glDeleteVertexArrays(1, &VAO);
-
-        glGenVertexArrays(1, &VAO);
-        glBindVertexArray(VAO);
-
-        glGenBuffers(1, &VBO);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-        const std::array<glm::vec3, 3> vertices{
-            glm::vec3{-k, -k, 0.0f},
-            glm::vec3{k, -k, 0.0f},
-            glm::vec3{ 0.0f,  k, 0.0f}
-        };
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
-                     vertices.data(), GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-                              static_cast<void*>(0));
-
-        glEnableVertexAttribArray(0);
-    }
+    static inline const TriangleVaoProvider vaoProvider{};
 };

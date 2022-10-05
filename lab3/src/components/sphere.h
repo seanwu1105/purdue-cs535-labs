@@ -8,11 +8,40 @@
 
 #include "../shader.h"
 
-const std::vector<glm::vec3> _tessellateIcosahedron(const size_t& divisionCount);
+const std::vector<glm::vec3> _tessellateIcosahedron(
+    const size_t& divisionCount
+);
 const std::vector<glm::vec3> _subdivideTriangle(
     const std::array<glm::vec3, 3>& triangle,
     const size_t& step
 );
+
+class SphereVaoProvider {
+public:
+    const std::vector<glm::vec3> vertices{ _tessellateIcosahedron(3) };
+
+    GLuint vao() const {
+        if (glIsVertexArray(_vao) == GL_TRUE) return _vao;
+
+        glGenVertexArrays(1, &_vao);
+        glBindVertexArray(_vao);
+
+        GLuint vbo{};
+        glGenBuffers(1, &vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
+                     vertices.data(), GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+                              static_cast<void*>(0));
+
+        glEnableVertexAttribArray(0);
+        return _vao;
+    }
+
+private:
+    mutable GLuint _vao{};
+};
 
 class SphereComponent {
 public:
@@ -25,7 +54,7 @@ public:
     }
 
     void render(const glm::mat4& view, const glm::vec2 location) const {
-        glBindVertexArray(VAO);
+        glBindVertexArray(vaoProvider.vao());
         glUseProgram(shaderProgramProvider.program());
         setUniformToProgram(shaderProgramProvider.program(), "view", view);
 
@@ -38,37 +67,19 @@ public:
 
         setUniformToProgram(shaderProgramProvider.program(), "model", model);
 
-        glDrawArrays(GL_LINE_LOOP, 0, static_cast<GLsizei>(vertices.size()));
+        glDrawArrays(GL_LINE_LOOP, 0,
+                     static_cast<GLsizei>(vaoProvider.vertices.size()));
     }
 
 private:
     static inline const DefaultShaderProgramProvider shaderProgramProvider{};
-    const std::vector<glm::vec3> vertices{ _tessellateIcosahedron(3) };
-    mutable GLuint VAO{ buildVAO() };
-    mutable GLuint VBO{};
+    static inline const SphereVaoProvider vaoProvider{};
     const glm::vec4 color{};
-
-    const GLuint buildVAO() const noexcept {
-        if (glIsBuffer(VBO) == GL_TRUE) glDeleteBuffers(1, &VBO);
-        if (glIsVertexArray(VAO) == GL_TRUE) glDeleteVertexArrays(1, &VAO);
-
-        glGenVertexArrays(1, &VAO);
-        glBindVertexArray(VAO);
-
-        glGenBuffers(1, &VBO);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
-                     vertices.data(), GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-                              static_cast<void*>(0));
-
-        glEnableVertexAttribArray(0);
-        return VAO;
-    }
 };
 
-const std::vector<glm::vec3> _tessellateIcosahedron(const size_t& divisionCount) {
+const std::vector<glm::vec3> _tessellateIcosahedron(
+    const size_t& divisionCount
+) {
     const std::array<glm::vec3, 5> baseVertices{ glm::vec3
         {std::cos(0), std::sin(0), 0},
         {std::cos(2.f / 3.f * M_PI), std::sin(2.f / 3.f * M_PI), 0},
@@ -77,14 +88,14 @@ const std::vector<glm::vec3> _tessellateIcosahedron(const size_t& divisionCount)
         {0, 0, -1}
     };
 
-    const std::array<std::array<glm::vec3, 3>, 6> triangles{ std::array<glm::vec3, 3>
+    const std::array<std::array<glm::vec3, 3>, 6> triangles{ {
         {baseVertices.at(0), baseVertices.at(1), baseVertices.at(3)},
         {baseVertices.at(0), baseVertices.at(2), baseVertices.at(3)},
         {baseVertices.at(1), baseVertices.at(2), baseVertices.at(3)},
         {baseVertices.at(0), baseVertices.at(1), baseVertices.at(4)},
         {baseVertices.at(0), baseVertices.at(2), baseVertices.at(4)},
         {baseVertices.at(1), baseVertices.at(2), baseVertices.at(4)},
-    };
+    } };
 
     std::vector<glm::vec3> vertices{};
 
