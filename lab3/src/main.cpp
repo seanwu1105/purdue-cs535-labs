@@ -1,4 +1,3 @@
-// TODO: Optimize the code with compiler flags
 // TODO: Reuse shader programs
 // TODO: Reuse VAOs
 
