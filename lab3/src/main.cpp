@@ -1,4 +1,3 @@
-// TODO: Reuse shader programs
 // TODO: Reuse VAOs
 // TODO: Update projection when window is resized
 

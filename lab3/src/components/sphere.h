@@ -20,15 +20,18 @@ public:
         const ShaderProgramProvider& shaderProgramProvider,
         const glm::mat4& projection,
         const glm::vec4& color
-    ) : shaderProgram(shaderProgramProvider.getDefaultShaderProgram()) {
+    ) : shaderProgram(shaderProgramProvider
+                      .getDefaultShaderProgram(typeid(*this))),
+        color(color) {
         setUniformToProgram(shaderProgram, "projection", projection);
-        setUniformToProgram(shaderProgram, "color", color);
     }
 
     void render(const glm::mat4& view, const glm::vec2 location) const {
         glBindVertexArray(VAO);
         glUseProgram(shaderProgram);
         setUniformToProgram(shaderProgram, "view", view);
+
+        setUniformToProgram(shaderProgram, "color", color);
 
         const auto scale{ 0.1f };
         glm::mat4 model(1.f);
@@ -45,6 +48,7 @@ private:
     mutable GLuint VAO{ buildVAO() };
     mutable GLuint VBO{};
     const GLuint shaderProgram{};
+    const glm::vec4 color{};
 
     const GLuint buildVAO() const {
         if (glIsBuffer(VBO) == GL_TRUE) glDeleteBuffers(1, &VBO);

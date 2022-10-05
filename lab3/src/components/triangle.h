@@ -13,7 +13,8 @@ public:
     TriangleComponent(
         const ShaderProgramProvider shaderProgramProvider,
         const glm::mat4& projection
-    ) : shaderProgram(shaderProgramProvider.getDefaultShaderProgram()) {
+    ) : shaderProgram(shaderProgramProvider
+                      .getDefaultShaderProgram(typeid(*this))) {
         setUniformToProgram(shaderProgram, "projection", projection);
         setUniformToProgram(shaderProgram, "color",
                             glm::vec4{ 0.6, 0.3, 0.4, 1.0 });

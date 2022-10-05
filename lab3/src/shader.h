@@ -2,16 +2,12 @@
 
 #include <filesystem>
 #include <fstream>
-#include <functional>
+#include <typeindex>
+#include <typeinfo>
 #include <unordered_map>
 
 #include <glad/glad.h>
 
-const size_t _sourceFilesHashing(
-    const std::unordered_map<std::string, GLenum>& sourceFiles
-);
-const bool _sourceFilesEqual(const std::unordered_map<std::string, GLenum>& m1,
-                             const std::unordered_map<std::string, GLenum>& m2);
 const GLuint _buildShaderProgram(
     const std::unordered_map<std::string, GLenum>& sourceFiles
 );
@@ -22,56 +18,28 @@ void _checkShaderLink(const auto shaderProgram);
 class ShaderProgramProvider {
 public:
     const GLuint getShaderProgram(
+        const std::type_info& typeInfo,
         const std::unordered_map<std::string, GLenum>& sourceFiles
     ) const {
-        if (shaderPrograms.contains(sourceFiles))
-            return shaderPrograms.at(sourceFiles);
+        if (shaderPrograms.contains(typeInfo))
+            return shaderPrograms.at(typeInfo);
 
         std::cout << "build shader program" << std::endl;
 
         const auto shaderProgram = _buildShaderProgram(sourceFiles);
-        shaderPrograms[sourceFiles] = shaderProgram;
+        shaderPrograms[typeInfo] = shaderProgram;
         return shaderProgram;
     }
 
-    const GLuint getDefaultShaderProgram() const {
-        return getShaderProgram({
-            {"default.vert", GL_VERTEX_SHADER},
-            {"default.frag", GL_FRAGMENT_SHADER}
-                                });
+    const GLuint getDefaultShaderProgram(const std::type_info& typeInfo) const {
+        return getShaderProgram(typeInfo,
+                                { {"default.vert", GL_VERTEX_SHADER},
+                                {"default.frag", GL_FRAGMENT_SHADER} });
     }
 
 private:
-    mutable std::unordered_map<
-        std::unordered_map<std::string, GLenum>,
-        GLuint,
-        std::function<const size_t(const std::unordered_map<std::string, GLenum>&)>,
-        std::function<const bool(const std::unordered_map<std::string, GLenum>&,
-                                 const std::unordered_map<std::string, GLenum>&)>
-    >
-        shaderPrograms{ {}, _sourceFilesHashing, _sourceFilesEqual };
+    mutable std::unordered_map<std::type_index, GLuint> shaderPrograms{};
 };
-
-const size_t _sourceFilesHashing(
-    const std::unordered_map<std::string, GLenum>& sourceFiles
-) {
-    std::vector<std::string> filenames{};
-    for (const auto& [filename, _] : sourceFiles)
-        filenames.push_back(filename);
-
-    std::sort(filenames.begin(), filenames.end());
-
-    std::string filenamesString{};
-    for (const auto& filename : filenames)
-        filenamesString += filename;
-
-    return std::hash<std::string>{}(filenamesString);
-}
-
-const bool _sourceFilesEqual(const std::unordered_map<std::string, GLenum>& m1,
-                             const std::unordered_map<std::string, GLenum>& m2) {
-    return m1 == m2;
-}
 
 const GLuint _buildShaderProgram(
     const std::unordered_map<std::string, GLenum>& sourceFiles

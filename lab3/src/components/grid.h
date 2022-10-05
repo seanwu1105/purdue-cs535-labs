@@ -12,7 +12,8 @@ public:
     GridComponent(
         const ShaderProgramProvider& shaderProgramProvider,
         const glm::mat4& projection
-    ) : shaderProgram(shaderProgramProvider.getDefaultShaderProgram()) {
+    ) : shaderProgram(shaderProgramProvider
+                      .getDefaultShaderProgram(typeid(*this))) {
         auto model{ glm::mat4(1.0) };
 
         model = glm::rotate(model, glm::radians(-90.0f),
