@@ -16,7 +16,7 @@ const std::vector<glm::vec3> subdivideTriangle(
 
 class SphereComponent {
 private:
-    const std::vector<glm::vec3> vertices{ tessellateIcosahedron(4) };
+    const std::vector<glm::vec3> vertices{ tessellateIcosahedron(3) };
     mutable GLuint VAO{ buildVAO() };
     mutable GLuint VBO{};
     const GLuint shaderProgram{ buildShaderProgram({
@@ -43,17 +43,22 @@ private:
     }
 
 public:
-    SphereComponent(const glm::mat4& projection) {
+    SphereComponent(const glm::mat4& projection, const glm::vec4& color) {
         setUniformToProgram(shaderProgram, "projection", projection);
-        setUniformToProgram(shaderProgram, "model", glm::mat4(1.0f));
-        setUniformToProgram(shaderProgram, "color",
-                            glm::vec4{ 0.5, 0.9, 0.3, 1.0 });
+        setUniformToProgram(shaderProgram, "color", color);
     }
 
-    void render(const glm::mat4& view) const {
+    void render(const glm::mat4& view, const glm::vec2 location) const {
         glBindVertexArray(VAO);
         glUseProgram(shaderProgram);
         setUniformToProgram(shaderProgram, "view", view);
+
+        const auto scale{ 0.1f };
+        glm::mat4 model(1.f);
+        model = glm::scale(model, glm::vec3(scale));
+        model = glm::translate(model, { location.x, 1.f, location.y });
+
+        setUniformToProgram(shaderProgram, "model", model);
 
         glDrawArrays(GL_LINE_LOOP, 0, (GLsizei)vertices.size());
     }

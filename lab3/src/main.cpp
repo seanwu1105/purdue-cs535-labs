@@ -32,15 +32,30 @@ int main() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glEnable(GL_DEPTH_TEST);
 
-    const float k{ 0.5f };
-
     const Scene scene{};
+
+    const SceneData data{
+        .goodSphereLocations{
+            { -5.f, -5.f },
+            { 2.f, -3.f },
+            { -6.f, 4.f },
+            { 7.f, 9.f },
+            { 1.f, 0.f }
+        },
+        .badSphereLocations{
+            {-7.f, -3.f},
+            { 3.f, 6.f },
+            { -5.f, 7.f },
+            { 8.f, -1.f },
+            { 2.f, -7.f }
+        }
+    };
 
     while (!glfwWindowShouldClose(window)) {
         // TODO: input
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        scene.render(k);
+        scene.render(data);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
