@@ -17,6 +17,16 @@ struct SceneData {
 };
 
 class Scene {
+public:
+    void render(const SceneData& data) const {
+        axesComponent.render(view);
+        gridComponent.render(view);
+        triangleComponent.render(view, 0.5f);
+        floorComponent.render(view);
+        renderGoodSpheres(data);
+        renderBadSpheres(data);
+    }
+
 private:
     const glm::mat4 projection{ glm::perspective(glm::radians(45.0f),
                                                   getViewAspectRatio(),
@@ -59,15 +69,5 @@ private:
             sphere.render(view, data.badSphereLocations.at(i));
             ++i;
         }
-    }
-
-public:
-    void render(const SceneData& data) const {
-        axesComponent.render(view);
-        gridComponent.render(view);
-        triangleComponent.render(view, 0.5f);
-        floorComponent.render(view);
-        renderGoodSpheres(data);
-        renderBadSpheres(data);
     }
 };

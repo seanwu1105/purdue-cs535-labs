@@ -1,3 +1,5 @@
+// TODO: Draw arrow
+
 #pragma once
 
 #include <array>
@@ -10,6 +12,32 @@
 #include "../utils.h"
 
 class AxesComponent {
+public:
+    AxesComponent(const glm::mat4& projection) {
+        auto model{ glm::mat4(1.0) };
+
+        setUniformToProgram(shaderProgram, "model", model);
+        setUniformToProgram(shaderProgram, "projection", projection);
+    }
+
+    void render(const glm::mat4& view) const {
+        glBindVertexArray(VAO);
+        glUseProgram(shaderProgram);
+        setUniformToProgram(shaderProgram, "view", view);
+
+        setUniformToProgram(shaderProgram, "color",
+                            glm::vec4{ 1.0, 0.0, 0.0, 1.0 });
+        glDrawArrays(GL_LINES, 0, 2);
+
+        setUniformToProgram(shaderProgram, "color",
+                            glm::vec4{ 0.0, 1.0, 0.0, 1.0 });
+        glDrawArrays(GL_LINES, 2, 2);
+
+        setUniformToProgram(shaderProgram, "color",
+                            glm::vec4{ 0.0, 0.0, 1.0, 1.0 });
+        glDrawArrays(GL_LINES, 4, 2);
+    }
+
 private:
     const std::array<glm::vec3, 6> vertices{
         glm::vec3{-1, 0, 0},
@@ -43,31 +71,5 @@ private:
         glEnableVertexAttribArray(0);
 
         return VAO;
-    }
-
-public:
-    AxesComponent(const glm::mat4& projection) {
-        auto model{ glm::mat4(1.0) };
-
-        setUniformToProgram(shaderProgram, "model", model);
-        setUniformToProgram(shaderProgram, "projection", projection);
-    }
-
-    void render(const glm::mat4& view) const {
-        glBindVertexArray(VAO);
-        glUseProgram(shaderProgram);
-        setUniformToProgram(shaderProgram, "view", view);
-
-        setUniformToProgram(shaderProgram, "color",
-                            glm::vec4{ 1.0, 0.0, 0.0, 1.0 });
-        glDrawArrays(GL_LINES, 0, 2);
-
-        setUniformToProgram(shaderProgram, "color",
-                            glm::vec4{ 0.0, 1.0, 0.0, 1.0 });
-        glDrawArrays(GL_LINES, 2, 2);
-
-        setUniformToProgram(shaderProgram, "color",
-                            glm::vec4{ 0.0, 0.0, 1.0, 1.0 });
-        glDrawArrays(GL_LINES, 4, 2);
     }
 };

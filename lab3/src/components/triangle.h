@@ -9,6 +9,32 @@
 #include "../shader.h"
 
 class TriangleComponent {
+public:
+    TriangleComponent(const glm::mat4& projection) {
+        setUniformToProgram(shaderProgram, "projection", projection);
+        setUniformToProgram(shaderProgram, "color",
+                            glm::vec4{ 0.6, 0.3, 0.4, 1.0 });
+    }
+
+    void render(const glm::mat4& view, const float& data) const {
+        if (data != prev_data) {
+            buildVAO(data);
+            prev_data = data;
+        }
+
+        glBindVertexArray(VAO);
+        glUseProgram(shaderProgram);
+        setUniformToProgram(shaderProgram, "view", view);
+
+        const auto rotateOffset{ (float)glfwGetTime() * 100 };
+        const auto model{ glm::rotate(glm::mat4(1.0f),
+                                      glm::radians(rotateOffset),
+                                      glm::vec3(1.0, 1.0, 1.0)) };
+        setUniformToProgram(shaderProgram, "model", model);
+
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+    }
+    
 private:
     mutable float prev_data{};
     mutable GLuint VAO{};
@@ -38,31 +64,5 @@ private:
                               (void*)0);
 
         glEnableVertexAttribArray(0);
-    }
-
-public:
-    TriangleComponent(const glm::mat4& projection) {
-        setUniformToProgram(shaderProgram, "projection", projection);
-        setUniformToProgram(shaderProgram, "color",
-                            glm::vec4{ 0.6, 0.3, 0.4, 1.0 });
-    }
-
-    void render(const glm::mat4& view, const float& data) const {
-        if (data != prev_data) {
-            buildVAO(data);
-            prev_data = data;
-        }
-
-        glBindVertexArray(VAO);
-        glUseProgram(shaderProgram);
-        setUniformToProgram(shaderProgram, "view", view);
-
-        const auto rotateOffset{ (float)glfwGetTime() * 100 };
-        const auto model{ glm::rotate(glm::mat4(1.0f),
-                                      glm::radians(rotateOffset),
-                                      glm::vec3(1.0, 1.0, 1.0)) };
-        setUniformToProgram(shaderProgram, "model", model);
-
-        glDrawArrays(GL_TRIANGLES, 0, 3);
     }
 };

@@ -10,6 +10,26 @@
 const std::vector<glm::vec3> _tessellateFloor(const GLsizei& divisionCount);
 
 class FloorComponent {
+public:
+    FloorComponent(const glm::mat4& projection) {
+        auto model{ glm::mat4(1.0) };
+
+        model = glm::rotate(model, glm::radians(-90.0f),
+                            glm::vec3{ 1.0, 0.0, 0.0 });
+
+        setUniformToProgram(shaderProgram, "model", model);
+        setUniformToProgram(shaderProgram, "projection", projection);
+        setUniformToProgram(shaderProgram, "color", glm::vec4(0.7f));
+    }
+
+    void render(const glm::mat4& view) const {
+        glBindVertexArray(VAO);
+        glUseProgram(shaderProgram);
+        setUniformToProgram(shaderProgram, "view", view);
+
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, divisionCount * divisionCount * 6);
+    }
+
 private:
     const GLsizei divisionCount{ 20 };
     mutable GLuint VAO{ buildVAO() };
@@ -38,26 +58,6 @@ private:
         glEnableVertexAttribArray(0);
 
         return VAO;
-    }
-
-public:
-    FloorComponent(const glm::mat4& projection) {
-        auto model{ glm::mat4(1.0) };
-
-        model = glm::rotate(model, glm::radians(-90.0f),
-                            glm::vec3{ 1.0, 0.0, 0.0 });
-
-        setUniformToProgram(shaderProgram, "model", model);
-        setUniformToProgram(shaderProgram, "projection", projection);
-        setUniformToProgram(shaderProgram, "color", glm::vec4(0.7f));
-    }
-
-    void render(const glm::mat4& view) const {
-        glBindVertexArray(VAO);
-        glUseProgram(shaderProgram);
-        setUniformToProgram(shaderProgram, "view", view);
-
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, divisionCount * divisionCount * 6);
     }
 };
 
