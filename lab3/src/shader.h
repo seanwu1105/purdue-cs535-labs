@@ -24,8 +24,6 @@ public:
         if (shaderPrograms.contains(typeInfo))
             return shaderPrograms.at(typeInfo);
 
-        std::cout << "build shader program" << std::endl;
-
         const auto shaderProgram = _buildShaderProgram(sourceFiles);
         shaderPrograms[typeInfo] = shaderProgram;
         return shaderProgram;
@@ -79,11 +77,11 @@ void _checkShaderCompile(const auto shader) {
     GLint success{};
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
     if (!success) {
-        GLchar infoLog[1024]{};
-        glGetShaderInfoLog(shader, 1024, nullptr, infoLog);
+        std::array<GLchar, 1024> infoLog{};
+        glGetShaderInfoLog(shader, 1024, nullptr, infoLog.data());
         std::cout << "Shader Compilation Failed" << std::endl
-            << infoLog << std::endl;
-        throw std::runtime_error(infoLog);
+            << infoLog.data() << std::endl;
+        throw std::runtime_error(infoLog.data());
     }
 }
 
@@ -91,11 +89,11 @@ void _checkShaderLink(const auto shaderProgram) {
     GLint success{};
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
     if (!success) {
-        GLchar infoLog[1024]{};
-        glGetProgramInfoLog(shaderProgram, 1024, nullptr, infoLog);
+        std::array<GLchar, 1024> infoLog{};
+        glGetProgramInfoLog(shaderProgram, 1024, nullptr, infoLog.data());
         std::cout << "Shader Program Link Failed" << std::endl
-            << infoLog << std::endl;
-        throw std::runtime_error(infoLog);
+            << infoLog.data() << std::endl;
+        throw std::runtime_error(infoLog.data());
     }
 }
 

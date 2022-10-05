@@ -5,7 +5,7 @@
 
 class RaiiGlfw {
 public:
-    RaiiGlfw() {
+    RaiiGlfw() noexcept {
         glfwSetErrorCallback([](int code, const char* description) {
             std::cout << "GLFW error: [" << code << "] " << description
                 << std::endl;

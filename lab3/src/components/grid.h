@@ -50,8 +50,8 @@ private:
         glGenBuffers(1, &VBO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-        const auto gridMin{ -1.0f };
-        const auto gridMax{ 1.0f };
+        constexpr auto gridMin{ -1.0f };
+        constexpr auto gridMax{ 1.0f };
         const auto divisionSize{ std::abs(gridMax - gridMin) / gridCount };
         std::vector<glm::vec3> vertices{};
         for (size_t i = 0; i <= gridCount; i++) {
@@ -66,7 +66,7 @@ private:
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
                      vertices.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-                              (void*)0);
+                              static_cast<void*>(0));
 
         glEnableVertexAttribArray(0);
 

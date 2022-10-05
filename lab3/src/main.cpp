@@ -13,7 +13,11 @@
 #include "scene.h"
 #include "shader.h"
 
-void framebufferSizeCallback(GLFWwindow* window, int width, int height);
+void framebufferSizeCallback(
+    GLFWwindow* window,
+    int width,
+    int height
+) noexcept;
 
 int main() {
     const RaiiGlfw raiiGlfw{};
@@ -67,6 +71,10 @@ int main() {
     return 0;
 }
 
-void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
+void framebufferSizeCallback(
+    GLFWwindow* window,
+    int width,
+    int height
+) noexcept {
     glViewport(0, 0, width, height);
 }

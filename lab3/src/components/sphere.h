@@ -33,14 +33,14 @@ public:
 
         setUniformToProgram(shaderProgram, "color", color);
 
-        const auto scale{ 0.1f };
+        constexpr auto scale{ 0.1f };
         glm::mat4 model(1.f);
         model = glm::scale(model, glm::vec3(scale));
         model = glm::translate(model, { location.x, 1.f, location.y });
 
         setUniformToProgram(shaderProgram, "model", model);
 
-        glDrawArrays(GL_LINE_LOOP, 0, (GLsizei)vertices.size());
+        glDrawArrays(GL_LINE_LOOP, 0, static_cast<GLsizei>(vertices.size()));
     }
 
 private:
@@ -50,7 +50,7 @@ private:
     const GLuint shaderProgram{};
     const glm::vec4 color{};
 
-    const GLuint buildVAO() const {
+    const GLuint buildVAO() const noexcept {
         if (glIsBuffer(VBO) == GL_TRUE) glDeleteBuffers(1, &VBO);
         if (glIsVertexArray(VAO) == GL_TRUE) glDeleteVertexArrays(1, &VAO);
 
@@ -63,7 +63,7 @@ private:
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
                      vertices.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-                              (void*)0);
+                              static_cast<void*>(0));
 
         glEnableVertexAttribArray(0);
         return VAO;
@@ -80,12 +80,12 @@ const std::vector<glm::vec3> _tessellateIcosahedron(const size_t& divisionCount)
     };
 
     const std::array<std::array<glm::vec3, 3>, 6> triangles{ std::array<glm::vec3, 3>
-        {baseVertices[0], baseVertices[1], baseVertices[3]},
-        {baseVertices[0], baseVertices[2], baseVertices[3]},
-        {baseVertices[1], baseVertices[2], baseVertices[3]},
-        {baseVertices[0], baseVertices[1], baseVertices[4]},
-        {baseVertices[0], baseVertices[2], baseVertices[4]},
-        {baseVertices[1], baseVertices[2], baseVertices[4]},
+        {baseVertices.at(0), baseVertices.at(1), baseVertices.at(3)},
+        {baseVertices.at(0), baseVertices.at(2), baseVertices.at(3)},
+        {baseVertices.at(1), baseVertices.at(2), baseVertices.at(3)},
+        {baseVertices.at(0), baseVertices.at(1), baseVertices.at(4)},
+        {baseVertices.at(0), baseVertices.at(2), baseVertices.at(4)},
+        {baseVertices.at(1), baseVertices.at(2), baseVertices.at(4)},
     };
 
     std::vector<glm::vec3> vertices{};

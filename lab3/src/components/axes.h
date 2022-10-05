@@ -53,7 +53,7 @@ private:
     mutable GLuint VBO{};
     const GLuint shaderProgram{};
 
-    const GLuint buildVAO() const {
+    const GLuint buildVAO() const noexcept {
         if (glIsBuffer(VBO) == GL_TRUE) glDeleteBuffers(1, &VBO);
         if (glIsVertexArray(VAO) == GL_TRUE) glDeleteVertexArrays(1, &VAO);
 
@@ -66,7 +66,7 @@ private:
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
                      vertices.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-                              (void*)0);
+                              static_cast<void*>(0));
 
         glEnableVertexAttribArray(0);
 

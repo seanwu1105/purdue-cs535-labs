@@ -55,7 +55,7 @@ private:
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
                      vertices.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-                              (void*)0);
+                              static_cast<void*>(0));
 
         glEnableVertexAttribArray(0);
 
@@ -64,8 +64,8 @@ private:
 };
 
 const std::vector<glm::vec3> _tessellateFloor(const GLsizei& divisionCount) {
-    const auto rangeMin{ -1.0f };
-    const auto rangeMax{ 1.0f };
+    constexpr auto rangeMin{ -1.0f };
+    constexpr auto rangeMax{ 1.0f };
     const auto divisionSize{ std::abs(rangeMax - rangeMin) / divisionCount };
     std::vector<glm::vec3> vertices{};
     for (size_t i = 0; i < divisionCount; i += 2) {
