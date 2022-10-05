@@ -9,7 +9,10 @@
 
 class GridComponent {
 public:
-    GridComponent(const glm::mat4& projection) {
+    GridComponent(
+        const ShaderProgramProvider& shaderProgramProvider,
+        const glm::mat4& projection
+    ) : shaderProgram(shaderProgramProvider.getDefaultShaderProgram()) {
         auto model{ glm::mat4(1.0) };
 
         model = glm::rotate(model, glm::radians(-90.0f),
@@ -34,9 +37,7 @@ private:
     const GLsizei gridCount{ 20 };
     mutable GLuint VAO{ buildVAO() };
     mutable GLuint VBO{};
-    const GLuint shaderProgram{ buildShaderProgram({
-        {"default.vert", GL_VERTEX_SHADER},
-        {"default.frag", GL_FRAGMENT_SHADER} }) };
+    const GLuint shaderProgram{};
 
     const GLuint buildVAO() const {
         if (glIsBuffer(VBO) == GL_TRUE) glDeleteBuffers(1, &VBO);

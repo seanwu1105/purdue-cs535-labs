@@ -2,15 +2,78 @@
 
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <unordered_map>
 
 #include <glad/glad.h>
 
+const size_t _sourceFilesHashing(
+    const std::unordered_map<std::string, GLenum>& sourceFiles
+);
+const bool _sourceFilesEqual(const std::unordered_map<std::string, GLenum>& m1,
+                             const std::unordered_map<std::string, GLenum>& m2);
+const GLuint _buildShaderProgram(
+    const std::unordered_map<std::string, GLenum>& sourceFiles
+);
 const std::string _readShaderSourceFile(const std::string& filename);
 void _checkShaderCompile(const auto shader);
 void _checkShaderLink(const auto shaderProgram);
 
-const GLuint buildShaderProgram(
+class ShaderProgramProvider {
+public:
+    const GLuint getShaderProgram(
+        const std::unordered_map<std::string, GLenum>& sourceFiles
+    ) const {
+        if (shaderPrograms.contains(sourceFiles))
+            return shaderPrograms.at(sourceFiles);
+
+        std::cout << "build shader program" << std::endl;
+
+        const auto shaderProgram = _buildShaderProgram(sourceFiles);
+        shaderPrograms[sourceFiles] = shaderProgram;
+        return shaderProgram;
+    }
+
+    const GLuint getDefaultShaderProgram() const {
+        return getShaderProgram({
+            {"default.vert", GL_VERTEX_SHADER},
+            {"default.frag", GL_FRAGMENT_SHADER}
+                                });
+    }
+
+private:
+    mutable std::unordered_map<
+        std::unordered_map<std::string, GLenum>,
+        GLuint,
+        std::function<const size_t(const std::unordered_map<std::string, GLenum>&)>,
+        std::function<const bool(const std::unordered_map<std::string, GLenum>&,
+                                 const std::unordered_map<std::string, GLenum>&)>
+    >
+        shaderPrograms{ {}, _sourceFilesHashing, _sourceFilesEqual };
+};
+
+const size_t _sourceFilesHashing(
+    const std::unordered_map<std::string, GLenum>& sourceFiles
+) {
+    std::vector<std::string> filenames{};
+    for (const auto& [filename, _] : sourceFiles)
+        filenames.push_back(filename);
+
+    std::sort(filenames.begin(), filenames.end());
+
+    std::string filenamesString{};
+    for (const auto& filename : filenames)
+        filenamesString += filename;
+
+    return std::hash<std::string>{}(filenamesString);
+}
+
+const bool _sourceFilesEqual(const std::unordered_map<std::string, GLenum>& m1,
+                             const std::unordered_map<std::string, GLenum>& m2) {
+    return m1 == m2;
+}
+
+const GLuint _buildShaderProgram(
     const std::unordered_map<std::string, GLenum>& sourceFiles
 ) {
     const auto shaderProgram{ glCreateProgram() };

@@ -5,6 +5,7 @@
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "shader.h"
 #include "components/axes.h"
 #include "components/grid.h"
 #include "components/triangle.h"
@@ -28,6 +29,8 @@ public:
     }
 
 private:
+    const ShaderProgramProvider shaderProgramProvider{};
+
     const glm::mat4 projection{ glm::perspective(glm::radians(45.0f),
                                                   getViewAspectRatio(),
                                                   0.1f, 100.0f) };
@@ -36,10 +39,10 @@ private:
 
     mutable SceneData preData{};
 
-    const AxesComponent axesComponent{ projection };
-    const GridComponent gridComponent{ projection };
-    const TriangleComponent triangleComponent{ projection };
-    const FloorComponent floorComponent{ projection };
+    const AxesComponent axesComponent{ shaderProgramProvider, projection };
+    const GridComponent gridComponent{ shaderProgramProvider, projection };
+    const TriangleComponent triangleComponent{ shaderProgramProvider,projection };
+    const FloorComponent floorComponent{ shaderProgramProvider, projection };
     mutable std::vector<SphereComponent> goodSpheres{};
     mutable std::vector<SphereComponent> badSpheres{};
 
@@ -48,7 +51,9 @@ private:
             preData.goodSphereLocations = data.goodSphereLocations;
             for (const auto& _ : data.goodSphereLocations) {
                 const glm::vec4 color{ 0.f, 0.45, 0.2, 1.0 };
-                goodSpheres.push_back(SphereComponent{ projection , color });
+                goodSpheres.push_back(
+                    SphereComponent{ shaderProgramProvider, projection,
+                                     color });
             }
         }
         for (size_t i = 0; const auto & sphere : goodSpheres) {
@@ -62,7 +67,9 @@ private:
             preData.badSphereLocations = data.badSphereLocations;
             for (const auto& _ : data.badSphereLocations) {
                 const glm::vec4 color{ 0.45, 0.f, 0.2, 1.0 };
-                badSpheres.push_back(SphereComponent{ projection, color });
+                badSpheres.push_back(
+                    SphereComponent{ shaderProgramProvider, projection,
+                                     color });
             }
         }
         for (size_t i = 0; const auto & sphere : badSpheres) {

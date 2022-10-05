@@ -16,7 +16,11 @@ const std::vector<glm::vec3> _subdivideTriangle(
 
 class SphereComponent {
 public:
-    SphereComponent(const glm::mat4& projection, const glm::vec4& color) {
+    SphereComponent(
+        const ShaderProgramProvider& shaderProgramProvider,
+        const glm::mat4& projection,
+        const glm::vec4& color
+    ) : shaderProgram(shaderProgramProvider.getDefaultShaderProgram()) {
         setUniformToProgram(shaderProgram, "projection", projection);
         setUniformToProgram(shaderProgram, "color", color);
     }
@@ -40,9 +44,7 @@ private:
     const std::vector<glm::vec3> vertices{ _tessellateIcosahedron(3) };
     mutable GLuint VAO{ buildVAO() };
     mutable GLuint VBO{};
-    const GLuint shaderProgram{ buildShaderProgram({
-        {"default.vert", GL_VERTEX_SHADER},
-        {"default.frag", GL_FRAGMENT_SHADER} }) };
+    const GLuint shaderProgram{};
 
     const GLuint buildVAO() const {
         if (glIsBuffer(VBO) == GL_TRUE) glDeleteBuffers(1, &VBO);

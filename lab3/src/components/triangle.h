@@ -10,7 +10,10 @@
 
 class TriangleComponent {
 public:
-    TriangleComponent(const glm::mat4& projection) {
+    TriangleComponent(
+        const ShaderProgramProvider shaderProgramProvider,
+        const glm::mat4& projection
+    ) : shaderProgram(shaderProgramProvider.getDefaultShaderProgram()) {
         setUniformToProgram(shaderProgram, "projection", projection);
         setUniformToProgram(shaderProgram, "color",
                             glm::vec4{ 0.6, 0.3, 0.4, 1.0 });
@@ -34,14 +37,12 @@ public:
 
         glDrawArrays(GL_TRIANGLES, 0, 3);
     }
-    
+
 private:
     mutable float prev_data{};
     mutable GLuint VAO{};
     mutable GLuint VBO{};
-    const GLuint shaderProgram{ buildShaderProgram({
-        {"default.vert", GL_VERTEX_SHADER},
-        {"default.frag", GL_FRAGMENT_SHADER} }) };
+    const GLuint shaderProgram{};
 
     void buildVAO(const float& k) const {
         if (glIsBuffer(VBO) == GL_TRUE) glDeleteBuffers(1, &VBO);

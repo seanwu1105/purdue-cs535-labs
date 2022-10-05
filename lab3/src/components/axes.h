@@ -13,10 +13,11 @@
 
 class AxesComponent {
 public:
-    AxesComponent(const glm::mat4& projection) {
-        auto model{ glm::mat4(1.0) };
-
-        setUniformToProgram(shaderProgram, "model", model);
+    AxesComponent(
+        const ShaderProgramProvider& shaderProgramProvider,
+        const glm::mat4& projection
+    ) : shaderProgram(shaderProgramProvider.getDefaultShaderProgram()) {
+        setUniformToProgram(shaderProgram, "model", glm::mat4(1.0));
         setUniformToProgram(shaderProgram, "projection", projection);
     }
 
@@ -49,9 +50,7 @@ private:
     };
     mutable GLuint VAO{ buildVAO() };
     mutable GLuint VBO{};
-    const GLuint shaderProgram{ buildShaderProgram({
-        {"default.vert", GL_VERTEX_SHADER},
-        {"default.frag", GL_FRAGMENT_SHADER} }) };
+    const GLuint shaderProgram{};
 
     const GLuint buildVAO() const {
         if (glIsBuffer(VBO) == GL_TRUE) glDeleteBuffers(1, &VBO);
