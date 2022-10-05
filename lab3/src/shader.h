@@ -8,38 +8,33 @@
 
 #include <glad/glad.h>
 
-const GLuint _buildShaderProgram(
+const GLuint buildShaderProgram(
     const std::unordered_map<std::string, GLenum>& sourceFiles
 );
 const std::string _readShaderSourceFile(const std::string& filename);
 void _checkShaderCompile(const auto shader);
 void _checkShaderLink(const auto shaderProgram);
 
-class ShaderProgramProvider {
+class DefaultShaderProgramProvider {
 public:
-    const GLuint getShaderProgram(
-        const std::type_info& typeInfo,
-        const std::unordered_map<std::string, GLenum>& sourceFiles
-    ) const {
-        if (shaderPrograms.contains(typeInfo))
-            return shaderPrograms.at(typeInfo);
+    GLuint program() const {
+        if (glIsProgram(_program) == GL_TRUE) return _program;
 
-        const auto shaderProgram = _buildShaderProgram(sourceFiles);
-        shaderPrograms[typeInfo] = shaderProgram;
-        return shaderProgram;
-    }
+        _program = buildShaderProgram(
+            {
+                {"default.vert", GL_VERTEX_SHADER},
+                {"default.frag", GL_FRAGMENT_SHADER}
+            }
+        );
 
-    const GLuint getDefaultShaderProgram(const std::type_info& typeInfo) const {
-        return getShaderProgram(typeInfo,
-                                { {"default.vert", GL_VERTEX_SHADER},
-                                {"default.frag", GL_FRAGMENT_SHADER} });
+        return _program;
     }
 
 private:
-    mutable std::unordered_map<std::type_index, GLuint> shaderPrograms{};
+    mutable GLuint _program{};
 };
 
-const GLuint _buildShaderProgram(
+const GLuint buildShaderProgram(
     const std::unordered_map<std::string, GLenum>& sourceFiles
 ) {
     const auto shaderProgram{ glCreateProgram() };

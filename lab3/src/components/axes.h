@@ -13,34 +13,31 @@
 
 class AxesComponent {
 public:
-    AxesComponent(
-        const ShaderProgramProvider& shaderProgramProvider,
-        const glm::mat4& projection
-    ) : shaderProgram(shaderProgramProvider
-                      .getDefaultShaderProgram(typeid(*this))) {
-        setUniformToProgram(shaderProgram, "model", glm::mat4(1.0));
-        setUniformToProgram(shaderProgram, "projection", projection);
+    AxesComponent(const glm::mat4& projection) {
+        setUniformToProgram(shaderProgramProvider.program(), "model", glm::mat4(1.0));
+        setUniformToProgram(shaderProgramProvider.program(), "projection", projection);
     }
 
     void render(const glm::mat4& view) const {
         glBindVertexArray(VAO);
-        glUseProgram(shaderProgram);
-        setUniformToProgram(shaderProgram, "view", view);
+        glUseProgram(shaderProgramProvider.program());
+        setUniformToProgram(shaderProgramProvider.program(), "view", view);
 
-        setUniformToProgram(shaderProgram, "color",
+        setUniformToProgram(shaderProgramProvider.program(), "color",
                             glm::vec4{ 1.0, 0.0, 0.0, 1.0 });
         glDrawArrays(GL_LINES, 0, 2);
 
-        setUniformToProgram(shaderProgram, "color",
+        setUniformToProgram(shaderProgramProvider.program(), "color",
                             glm::vec4{ 0.0, 1.0, 0.0, 1.0 });
         glDrawArrays(GL_LINES, 2, 2);
 
-        setUniformToProgram(shaderProgram, "color",
+        setUniformToProgram(shaderProgramProvider.program(), "color",
                             glm::vec4{ 0.0, 0.0, 1.0, 1.0 });
         glDrawArrays(GL_LINES, 4, 2);
     }
 
 private:
+    static inline const DefaultShaderProgramProvider shaderProgramProvider{};
     const std::array<glm::vec3, 6> vertices{
         glm::vec3{-1, 0, 0},
         glm::vec3{1, 0, 0},
@@ -51,7 +48,6 @@ private:
     };
     mutable GLuint VAO{ buildVAO() };
     mutable GLuint VBO{};
-    const GLuint shaderProgram{};
 
     const GLuint buildVAO() const noexcept {
         if (glIsBuffer(VBO) == GL_TRUE) glDeleteBuffers(1, &VBO);

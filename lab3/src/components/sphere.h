@@ -17,37 +17,35 @@ const std::vector<glm::vec3> _subdivideTriangle(
 class SphereComponent {
 public:
     SphereComponent(
-        const ShaderProgramProvider& shaderProgramProvider,
         const glm::mat4& projection,
         const glm::vec4& color
-    ) : shaderProgram(shaderProgramProvider
-                      .getDefaultShaderProgram(typeid(*this))),
-        color(color) {
-        setUniformToProgram(shaderProgram, "projection", projection);
+    ) : color(color) {
+        setUniformToProgram(shaderProgramProvider.program(),
+                            "projection", projection);
     }
 
     void render(const glm::mat4& view, const glm::vec2 location) const {
         glBindVertexArray(VAO);
-        glUseProgram(shaderProgram);
-        setUniformToProgram(shaderProgram, "view", view);
+        glUseProgram(shaderProgramProvider.program());
+        setUniformToProgram(shaderProgramProvider.program(), "view", view);
 
-        setUniformToProgram(shaderProgram, "color", color);
+        setUniformToProgram(shaderProgramProvider.program(), "color", color);
 
         constexpr auto scale{ 0.1f };
         glm::mat4 model(1.f);
         model = glm::scale(model, glm::vec3(scale));
         model = glm::translate(model, { location.x, 1.f, location.y });
 
-        setUniformToProgram(shaderProgram, "model", model);
+        setUniformToProgram(shaderProgramProvider.program(), "model", model);
 
         glDrawArrays(GL_LINE_LOOP, 0, static_cast<GLsizei>(vertices.size()));
     }
 
 private:
+    static inline const DefaultShaderProgramProvider shaderProgramProvider{};
     const std::vector<glm::vec3> vertices{ _tessellateIcosahedron(3) };
     mutable GLuint VAO{ buildVAO() };
     mutable GLuint VBO{};
-    const GLuint shaderProgram{};
     const glm::vec4 color{};
 
     const GLuint buildVAO() const noexcept {

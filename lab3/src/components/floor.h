@@ -11,34 +11,33 @@ const std::vector<glm::vec3> _tessellateFloor(const GLsizei& divisionCount);
 
 class FloorComponent {
 public:
-    FloorComponent(
-        const ShaderProgramProvider& shaderProgramProvider,
-        const glm::mat4& projection
-    ) : shaderProgram(shaderProgramProvider
-                      .getDefaultShaderProgram(typeid(*this))) {
+    FloorComponent(const glm::mat4& projection) {
         auto model{ glm::mat4(1.0) };
 
         model = glm::rotate(model, glm::radians(-90.0f),
                             glm::vec3{ 1.0, 0.0, 0.0 });
 
-        setUniformToProgram(shaderProgram, "model", model);
-        setUniformToProgram(shaderProgram, "projection", projection);
-        setUniformToProgram(shaderProgram, "color", glm::vec4(0.7f));
+        setUniformToProgram(shaderProgramProvider.program(),
+                            "model", model);
+        setUniformToProgram(shaderProgramProvider.program(),
+                            "projection", projection);
+        setUniformToProgram(shaderProgramProvider.program(),
+                            "color", glm::vec4(0.7f));
     }
 
     void render(const glm::mat4& view) const {
         glBindVertexArray(VAO);
-        glUseProgram(shaderProgram);
-        setUniformToProgram(shaderProgram, "view", view);
+        glUseProgram(shaderProgramProvider.program());
+        setUniformToProgram(shaderProgramProvider.program(), "view", view);
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, divisionCount * divisionCount * 6);
     }
 
 private:
+    static inline const DefaultShaderProgramProvider shaderProgramProvider{};
     const GLsizei divisionCount{ 20 };
     mutable GLuint VAO{ buildVAO() };
     mutable GLuint VBO{};
-    const GLuint shaderProgram{};
 
     const GLuint buildVAO() const {
         if (glIsBuffer(VBO) == GL_TRUE) glDeleteBuffers(1, &VBO);

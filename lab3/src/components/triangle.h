@@ -10,13 +10,10 @@
 
 class TriangleComponent {
 public:
-    TriangleComponent(
-        const ShaderProgramProvider shaderProgramProvider,
-        const glm::mat4& projection
-    ) : shaderProgram(shaderProgramProvider
-                      .getDefaultShaderProgram(typeid(*this))) {
-        setUniformToProgram(shaderProgram, "projection", projection);
-        setUniformToProgram(shaderProgram, "color",
+    TriangleComponent(const glm::mat4& projection) {
+        setUniformToProgram(shaderProgramProvider.program(),
+                            "projection", projection);
+        setUniformToProgram(shaderProgramProvider.program(), "color",
                             glm::vec4{ 0.6, 0.3, 0.4, 1.0 });
     }
 
@@ -27,23 +24,23 @@ public:
         }
 
         glBindVertexArray(VAO);
-        glUseProgram(shaderProgram);
-        setUniformToProgram(shaderProgram, "view", view);
+        glUseProgram(shaderProgramProvider.program());
+        setUniformToProgram(shaderProgramProvider.program(), "view", view);
 
         const auto rotateOffset{ static_cast<float>(glfwGetTime()) * 100 };
         const auto model{ glm::rotate(glm::mat4(1.0f),
                                       glm::radians(rotateOffset),
                                       glm::vec3(1.0, 1.0, 1.0)) };
-        setUniformToProgram(shaderProgram, "model", model);
+        setUniformToProgram(shaderProgramProvider.program(), "model", model);
 
         glDrawArrays(GL_TRIANGLES, 0, 3);
     }
 
 private:
+    static inline const DefaultShaderProgramProvider shaderProgramProvider{};
     mutable float prev_data{};
     mutable GLuint VAO{};
     mutable GLuint VBO{};
-    const GLuint shaderProgram{};
 
     void buildVAO(const float& k) const {
         if (glIsBuffer(VBO) == GL_TRUE) glDeleteBuffers(1, &VBO);
