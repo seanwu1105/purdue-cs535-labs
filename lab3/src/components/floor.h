@@ -40,22 +40,21 @@ private:
 
 class FloorComponent {
 public:
-  FloorComponent(const glm::mat4 &projection) {
+  FloorComponent() {
     auto model{glm::mat4(1.0)};
 
     model = glm::rotate(model, glm::radians(-90.0f), glm::vec3{1.0, 0.0, 0.0});
 
     setUniformToProgram(shaderProgramProvider.program(), "model", model);
-    setUniformToProgram(shaderProgramProvider.program(), "projection",
-                        projection);
     setUniformToProgram(shaderProgramProvider.program(), "color",
                         glm::vec4(0.7f));
   }
 
-  void render(const glm::mat4 &view) const {
+  void render(const glm::mat4 &view, const glm::mat4 &proj) const {
     glBindVertexArray(vaoProvider.vao());
     glUseProgram(shaderProgramProvider.program());
     setUniformToProgram(shaderProgramProvider.program(), "view", view);
+    setUniformToProgram(shaderProgramProvider.program(), "proj", proj);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0,
                  vaoProvider.divisionCount * vaoProvider.divisionCount * 6);

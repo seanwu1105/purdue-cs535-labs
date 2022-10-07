@@ -41,17 +41,16 @@ private:
 
 class AxesComponent {
 public:
-  AxesComponent(const glm::mat4 &projection) {
+  AxesComponent() {
     setUniformToProgram(shaderProgramProvider.program(), "model",
                         glm::mat4(1.0));
-    setUniformToProgram(shaderProgramProvider.program(), "projection",
-                        projection);
   }
 
-  void render(const glm::mat4 &view) const {
+  void render(const glm::mat4 &view, const glm::mat4 &proj) const {
     glBindVertexArray(VaoProvider.vao());
     glUseProgram(shaderProgramProvider.program());
     setUniformToProgram(shaderProgramProvider.program(), "view", view);
+    setUniformToProgram(shaderProgramProvider.program(), "proj", proj);
 
     setUniformToProgram(shaderProgramProvider.program(), "color",
                         glm::vec4{1.0, 0.0, 0.0, 1.0});

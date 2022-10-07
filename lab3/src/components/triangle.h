@@ -39,17 +39,16 @@ private:
 
 class TriangleComponent {
 public:
-  TriangleComponent(const glm::mat4 &projection) {
-    setUniformToProgram(shaderProgramProvider.program(), "projection",
-                        projection);
+  TriangleComponent() {
     setUniformToProgram(shaderProgramProvider.program(), "color",
                         glm::vec4{0.6, 0.3, 0.4, 1.0});
   }
 
-  void render(const glm::mat4 &view) const {
+  void render(const glm::mat4 &view, const glm::mat4 &proj) const {
     glBindVertexArray(vaoProvider.vao());
     glUseProgram(shaderProgramProvider.program());
     setUniformToProgram(shaderProgramProvider.program(), "view", view);
+    setUniformToProgram(shaderProgramProvider.program(), "proj", proj);
 
     const auto rotateOffset{static_cast<float>(glfwGetTime()) * 100};
     const auto model{glm::rotate(glm::mat4(1.0f), glm::radians(rotateOffset),

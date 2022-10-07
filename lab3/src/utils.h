@@ -4,7 +4,7 @@
 
 #include <glad/glad.h>
 
-const float getViewAspectRatio() noexcept {
+const float viewAspectRatio() noexcept {
   std::array<GLint, 4> viewport{};
   glGetIntegerv(GL_VIEWPORT, viewport.data());
   return {static_cast<float>(viewport.at(2) - viewport.at(0)) /

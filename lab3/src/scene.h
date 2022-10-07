@@ -19,54 +19,55 @@ struct SceneData {
 
 class Scene {
 public:
-  void render(const SceneData &data) const {
-    axesComponent.render(view);
-    gridComponent.render(view);
-    triangleComponent.render(view);
-    floorComponent.render(view);
-    renderGoodSpheres(data);
-    renderBadSpheres(data);
+  void render(const float &viewAspectRatio, const SceneData &data) const {
+    const glm::mat4 proj{
+        glm::perspective(glm::radians(45.0f), viewAspectRatio, 0.1f, 100.0f)};
+
+    axesComponent.render(view, proj);
+    gridComponent.render(view, proj);
+    triangleComponent.render(view, proj);
+    floorComponent.render(view, proj);
+    renderGoodSpheres(proj, data);
+    renderBadSpheres(proj, data);
   }
 
 private:
-  const glm::mat4 projection{glm::perspective(
-      glm::radians(45.0f), getViewAspectRatio(), 0.1f, 100.0f)};
   const glm::mat4 view{
       glm::lookAt(glm::vec3{-1, 2, 2}, glm::vec3{}, glm::vec3{0, 1, 0})};
 
   mutable SceneData preData{};
 
-  const AxesComponent axesComponent{projection};
-  const GridComponent gridComponent{projection};
-  const TriangleComponent triangleComponent{projection};
-  const FloorComponent floorComponent{projection};
+  const AxesComponent axesComponent{};
+  const GridComponent gridComponent{};
+  const TriangleComponent triangleComponent{};
+  const FloorComponent floorComponent{};
   mutable std::vector<SphereComponent> goodSpheres{};
   mutable std::vector<SphereComponent> badSpheres{};
 
-  void renderGoodSpheres(const SceneData &data) const {
+  void renderGoodSpheres(const glm::mat4 &proj, const SceneData &data) const {
     if (data.goodSphereLocations != preData.goodSphereLocations) {
       preData.goodSphereLocations = data.goodSphereLocations;
       for (const auto &_ : data.goodSphereLocations) {
         const glm::vec4 color{0.f, 0.45, 0.2, 1.0};
-        goodSpheres.push_back(SphereComponent{projection, color});
+        goodSpheres.push_back(SphereComponent{color});
       }
     }
     for (size_t i = 0; const auto &sphere : goodSpheres) {
-      sphere.render(view, data.goodSphereLocations.at(i));
+      sphere.render(view, proj, data.goodSphereLocations.at(i));
       ++i;
     }
   }
 
-  void renderBadSpheres(const SceneData &data) const {
+  void renderBadSpheres(const glm::mat4 &proj, const SceneData &data) const {
     if (data.badSphereLocations != preData.badSphereLocations) {
       preData.badSphereLocations = data.badSphereLocations;
       for (const auto &_ : data.badSphereLocations) {
         const glm::vec4 color{0.45, 0.f, 0.2, 1.0};
-        badSpheres.push_back(SphereComponent{projection, color});
+        badSpheres.push_back(SphereComponent{color});
       }
     }
     for (size_t i = 0; const auto &sphere : badSpheres) {
-      sphere.render(view, data.badSphereLocations.at(i));
+      sphere.render(view, proj, data.badSphereLocations.at(i));
       ++i;
     }
   }

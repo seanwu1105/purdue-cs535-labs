@@ -51,22 +51,21 @@ private:
 
 class GridComponent {
 public:
-  GridComponent(const glm::mat4 &projection) {
+  GridComponent() {
     auto model{glm::mat4(1.0)};
 
     model = glm::rotate(model, glm::radians(-90.0f), glm::vec3{1.0, 0.0, 0.0});
 
     setUniformToProgram(shaderProgramProvider.program(), "model", model);
-    setUniformToProgram(shaderProgramProvider.program(), "projection",
-                        projection);
     setUniformToProgram(shaderProgramProvider.program(), "color",
                         glm::vec4(0.6f));
   }
 
-  void render(const glm::mat4 &view) const {
+  void render(const glm::mat4 &view, const glm::mat4 &proj) const {
     glBindVertexArray(vaoProvider.vao());
     glUseProgram(shaderProgramProvider.program());
     setUniformToProgram(shaderProgramProvider.program(), "view", view);
+    setUniformToProgram(shaderProgramProvider.program(), "proj", proj);
 
     glDrawArrays(GL_LINES, 0, (vaoProvider.gridCount + 1) * 2);
     glDrawArrays(GL_LINES, (vaoProvider.gridCount + 1) * 2,

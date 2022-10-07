@@ -1,5 +1,3 @@
-// TODO: Update projection when window is resized
-
 #define _USE_MATH_DEFINES
 
 #include <cmath>
@@ -11,6 +9,7 @@
 #include "raii-glfw.h"
 #include "scene.h"
 #include "shader.h"
+#include "utils.h"
 
 void framebufferSizeCallback(GLFWwindow *window, int width,
                              int height) noexcept;
@@ -47,7 +46,7 @@ int main() {
     // TODO: input
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    scene.render(data);
+    scene.render(viewAspectRatio(), data);
 
     glfwSwapBuffers(window);
     glfwPollEvents();

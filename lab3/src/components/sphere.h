@@ -42,16 +42,14 @@ private:
 
 class SphereComponent {
 public:
-  SphereComponent(const glm::mat4 &projection, const glm::vec4 &color)
-      : color(color) {
-    setUniformToProgram(shaderProgramProvider.program(), "projection",
-                        projection);
-  }
+  SphereComponent(const glm::vec4 &color) : color(color) {}
 
-  void render(const glm::mat4 &view, const glm::vec2 location) const {
+  void render(const glm::mat4 &view, const glm::mat4 &proj,
+              const glm::vec2 &location) const {
     glBindVertexArray(vaoProvider.vao());
     glUseProgram(shaderProgramProvider.program());
     setUniformToProgram(shaderProgramProvider.program(), "view", view);
+    setUniformToProgram(shaderProgramProvider.program(), "proj", proj);
 
     setUniformToProgram(shaderProgramProvider.program(), "color", color);
 
