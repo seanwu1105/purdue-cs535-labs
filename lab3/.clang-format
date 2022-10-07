@@ -1,0 +1,3 @@
+BasedOnStyle: LLVM
+AllowShortIfStatementsOnASingleLine : AllIfsAndElse
+SortIncludes: CaseInsensitive

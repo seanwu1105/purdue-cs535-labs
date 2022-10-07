@@ -5,7 +5,6 @@
 #include <array>
 
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "../shader.h"
@@ -13,67 +12,61 @@
 
 class AxesVaoProvider {
 public:
-    GLuint vao() const {
-        if (glIsVertexArray(_vao) == GL_TRUE) return _vao;
+  GLuint vao() const {
+    if (glIsVertexArray(_vao) == GL_TRUE) return _vao;
 
-        glGenVertexArrays(1, &_vao);
-        glBindVertexArray(_vao);
+    glGenVertexArrays(1, &_vao);
+    glBindVertexArray(_vao);
 
-        GLuint vbo{};
-        glGenBuffers(1, &vbo);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    GLuint vbo{};
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-        const std::array<glm::vec3, 6> vertices{ {
-            {-1, 0, 0},
-            {1, 0, 0},
-            {0, -1, 0},
-            {0, 1, 0},
-            {0, 0, -1},
-            {0, 0, 1}
-        } };
+    const std::array<glm::vec3, 6> vertices{
+        {{-1, 0, 0}, {1, 0, 0}, {0, -1, 0}, {0, 1, 0}, {0, 0, -1}, {0, 0, 1}}};
 
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
-                     vertices.data(), GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-                              static_cast<void*>(0));
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3),
+                 vertices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+                          static_cast<void *>(0));
 
-        glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(0);
 
-        return _vao;
-    }
+    return _vao;
+  }
 
 private:
-    mutable GLuint _vao{};
+  mutable GLuint _vao{};
 };
 
 class AxesComponent {
 public:
-    AxesComponent(const glm::mat4& projection) {
-        setUniformToProgram(shaderProgramProvider.program(),
-                            "model", glm::mat4(1.0));
-        setUniformToProgram(shaderProgramProvider.program(),
-                            "projection", projection);
-    }
+  AxesComponent(const glm::mat4 &projection) {
+    setUniformToProgram(shaderProgramProvider.program(), "model",
+                        glm::mat4(1.0));
+    setUniformToProgram(shaderProgramProvider.program(), "projection",
+                        projection);
+  }
 
-    void render(const glm::mat4& view) const {
-        glBindVertexArray(VaoProvider.vao());
-        glUseProgram(shaderProgramProvider.program());
-        setUniformToProgram(shaderProgramProvider.program(), "view", view);
+  void render(const glm::mat4 &view) const {
+    glBindVertexArray(VaoProvider.vao());
+    glUseProgram(shaderProgramProvider.program());
+    setUniformToProgram(shaderProgramProvider.program(), "view", view);
 
-        setUniformToProgram(shaderProgramProvider.program(), "color",
-                            glm::vec4{ 1.0, 0.0, 0.0, 1.0 });
-        glDrawArrays(GL_LINES, 0, 2);
+    setUniformToProgram(shaderProgramProvider.program(), "color",
+                        glm::vec4{1.0, 0.0, 0.0, 1.0});
+    glDrawArrays(GL_LINES, 0, 2);
 
-        setUniformToProgram(shaderProgramProvider.program(), "color",
-                            glm::vec4{ 0.0, 1.0, 0.0, 1.0 });
-        glDrawArrays(GL_LINES, 2, 2);
+    setUniformToProgram(shaderProgramProvider.program(), "color",
+                        glm::vec4{0.0, 1.0, 0.0, 1.0});
+    glDrawArrays(GL_LINES, 2, 2);
 
-        setUniformToProgram(shaderProgramProvider.program(), "color",
-                            glm::vec4{ 0.0, 0.0, 1.0, 1.0 });
-        glDrawArrays(GL_LINES, 4, 2);
-    }
+    setUniformToProgram(shaderProgramProvider.program(), "color",
+                        glm::vec4{0.0, 0.0, 1.0, 1.0});
+    glDrawArrays(GL_LINES, 4, 2);
+  }
 
 private:
-    static inline const DefaultShaderProgramProvider shaderProgramProvider{};
-    static inline const AxesVaoProvider VaoProvider{};
+  static inline const DefaultShaderProgramProvider shaderProgramProvider{};
+  static inline const AxesVaoProvider VaoProvider{};
 };
