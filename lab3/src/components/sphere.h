@@ -42,7 +42,8 @@ private:
 
 class SphereComponent {
 public:
-  SphereComponent(const glm::vec4 &color) : color(color) {}
+  SphereComponent(const float &scale, const glm::vec4 &color)
+      : color(color), scale(scale) {}
 
   void render(const glm::mat4 &view, const glm::mat4 &proj,
               const glm::vec2 &location) const {
@@ -53,10 +54,9 @@ public:
 
     setUniformToProgram(shaderProgramProvider.program(), "color", color);
 
-    constexpr auto scale{0.1f};
     glm::mat4 model(1.f);
+    model = glm::translate(model, {location.x, .1f, location.y});
     model = glm::scale(model, glm::vec3(scale));
-    model = glm::translate(model, {location.x, 1.f, location.y});
 
     setUniformToProgram(shaderProgramProvider.program(), "model", model);
 
@@ -67,6 +67,7 @@ public:
 private:
   static inline const DefaultShaderProgramProvider shaderProgramProvider{};
   static inline const SphereVaoProvider vaoProvider{};
+  const float scale{.1f};
   const glm::vec4 color{};
 };
 

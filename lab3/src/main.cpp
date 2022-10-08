@@ -6,6 +6,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "bullet.h"
 #include "player.h"
 #include "raii-glfw.h"
 #include "scene.h"
@@ -14,7 +15,14 @@
 
 void framebufferSizeCallback(GLFWwindow *window, int width,
                              int height) noexcept;
-Player updatePlayer(GLFWwindow *window, const Player &player);
+const Player updatePlayer(GLFWwindow *window, const Player &player) noexcept;
+void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
+const bool outOfBulletRange(const Player &player,
+                            const Bullet &bullet) noexcept;
+
+struct WindowUserData {
+  bool mouseButtonPressed{false};
+};
 
 int main() {
   const RaiiGlfw raiiGlfw{};
@@ -31,7 +39,11 @@ int main() {
     return -1;
   }
 
+  WindowUserData userData{};
+  glfwSetWindowUserPointer(window, &userData);
+
   glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+  glfwSetMouseButtonCallback(window, mouseButtonCallback);
 
   glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
   glEnable(GL_DEPTH_TEST);
@@ -39,14 +51,27 @@ int main() {
   const Scene scene{};
 
   SceneData data{
-      .player{},
-      .goodSphereLocations{
-          {-5.f, -5.f}, {2.f, -3.f}, {-6.f, 4.f}, {7.f, 9.f}, {5.f, 0.f}},
-      .badSphereLocations{
-          {-7.f, -3.f}, {3.f, 6.f}, {-5.f, 7.f}, {8.f, -1.f}, {2.f, -7.f}}};
+      .goodSpherePositions{
+          {-.5f, -.5f}, {.2f, -.3f}, {-.6f, .4f}, {.7f, .9f}, {.5f, .0f}},
+      .badSpherePositions{
+          {-.7f, -.3f}, {.3f, .6f}, {-.5f, .7f}, {.8f, -.1f}, {.2f, -.7f}}};
 
   while (!glfwWindowShouldClose(window)) {
     data.player = updatePlayer(window, data.player);
+
+    if (userData.mouseButtonPressed) {
+      userData.mouseButtonPressed = false;
+
+      if (!data.bullet.visible) {
+        data.bullet = Bullet{.visible{true},
+                             .position{data.player.position},
+                             .angleDeg{data.player.angleDeg}};
+      }
+    }
+
+    if (data.bullet.visible) data.bullet = moveBullet(data.bullet);
+
+    if (outOfBulletRange(data.player, data.bullet)) data.bullet.visible = false;
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     scene.render(viewAspectRatio(), data);
@@ -63,7 +88,7 @@ void framebufferSizeCallback(GLFWwindow *window, int width,
   glViewport(0, 0, width, height);
 }
 
-Player updatePlayer(GLFWwindow *window, const Player &player) {
+const Player updatePlayer(GLFWwindow *window, const Player &player) noexcept {
   Player newPlayer{player};
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     newPlayer = moveForward(newPlayer);
@@ -74,4 +99,17 @@ Player updatePlayer(GLFWwindow *window, const Player &player) {
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     newPlayer = turnRight(newPlayer);
   return newPlayer;
+}
+
+void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
+  WindowUserData *userData =
+      static_cast<WindowUserData *>(glfwGetWindowUserPointer(window));
+
+  if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    userData->mouseButtonPressed = true;
+}
+
+const bool outOfBulletRange(const Player &player,
+                            const Bullet &bullet) noexcept {
+  return glm::distance(player.position, bullet.position) > 2.f;
 }

@@ -12,7 +12,7 @@ struct Player {
   float speed{0.00025f};
 };
 
-Player moveForward(const Player &player) {
+const Player moveForward(const Player &player) {
   Player newPlayer{player};
   newPlayer.position =
       player.position + glm::vec2{std::cos(glm::radians(player.angleDeg)),
@@ -21,7 +21,7 @@ Player moveForward(const Player &player) {
   return newPlayer;
 }
 
-Player moveBackward(const Player &player) {
+const Player moveBackward(const Player &player) {
   Player newPlayer{player};
   newPlayer.position =
       player.position - glm::vec2{std::cos(glm::radians(player.angleDeg)),
@@ -30,13 +30,13 @@ Player moveBackward(const Player &player) {
   return newPlayer;
 }
 
-Player turnLeft(const Player &player) {
+const Player turnLeft(const Player &player) {
   Player newPlayer{player};
   newPlayer.angleDeg -= player.speed * 500;
   return newPlayer;
 }
 
-Player turnRight(const Player &player) {
+const Player turnRight(const Player &player) {
   Player newPlayer{player};
   newPlayer.angleDeg += player.speed * 500;
   return newPlayer;
