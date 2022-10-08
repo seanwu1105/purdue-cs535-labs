@@ -23,6 +23,8 @@ void onPlayerTouchGoodSphere(std::vector<glm::vec2> &goodSpherePositions,
                              Player &player) noexcept;
 void onPlayerTouchBadSphere(const std::vector<glm::vec2> &badSpherePositions,
                             Player &player) noexcept;
+void onBulletTouchSphere(const std::vector<glm::vec2> &spherePositions,
+                         Bullet &bullet) noexcept;
 
 struct WindowUserData {
   bool mouseButtonPressed{false};
@@ -61,7 +63,6 @@ int main() {
           {-.7f, -.3f}, {.3f, .6f}, {-.5f, .7f}, {.8f, -.1f}, {.2f, -.7f}}};
 
   while (!glfwWindowShouldClose(window)) {
-    std::cout << data.player.speed << std::endl;
     data.player = updatePlayer(window, data.player);
 
     if (userData.mouseButtonPressed) {
@@ -81,6 +82,9 @@ int main() {
     onPlayerTouchGoodSphere(data.goodSpherePositions, data.player);
 
     onPlayerTouchBadSphere(data.badSpherePositions, data.player);
+
+    onBulletTouchSphere(data.goodSpherePositions, data.bullet);
+    onBulletTouchSphere(data.badSpherePositions, data.bullet);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     scene.render(viewAspectRatio(), data);
@@ -141,5 +145,15 @@ void onPlayerTouchBadSphere(const std::vector<glm::vec2> &badSpherePositions,
   for (const auto &position : badSpherePositions) {
     if (glm::distance(player.position, position) <= 0.15f)
       player.speed = std::max(player.speed - 0.00015f, 0.00010f);
+  }
+}
+
+void onBulletTouchSphere(const std::vector<glm::vec2> &spherePositions,
+                         Bullet &bullet) noexcept {
+  for (const auto &position : spherePositions) {
+    if (glm::distance(bullet.position, position) <= 0.1f) {
+      bullet.visible = false;
+      break;
+    }
   }
 }
