@@ -10,6 +10,7 @@ struct Player {
   glm::vec2 position{};
   float angleDeg{};
   float speed{0.00025f};
+  size_t remainingBulletCount{3};
 };
 
 const Player moveForward(const Player &player) {

@@ -80,7 +80,8 @@ int main() {
     if (userData.mouseButtonPressed) {
       userData.mouseButtonPressed = false;
 
-      if (!data.bullet.visible) {
+      if (data.player.remainingBulletCount > 0 && !data.bullet.visible) {
+        data.player.remainingBulletCount--;
         data.bullet = Bullet{.visible{true},
                              .position{data.player.position},
                              .angleDeg{data.player.angleDeg}};
