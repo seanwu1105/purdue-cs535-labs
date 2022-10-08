@@ -6,6 +6,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "player.h"
 #include "raii-glfw.h"
 #include "scene.h"
 #include "shader.h"
@@ -13,6 +14,7 @@
 
 void framebufferSizeCallback(GLFWwindow *window, int width,
                              int height) noexcept;
+Player updatePlayer(GLFWwindow *window, const Player &player);
 
 int main() {
   const RaiiGlfw raiiGlfw{};
@@ -36,14 +38,15 @@ int main() {
 
   const Scene scene{};
 
-  const SceneData data{
+  SceneData data{
+      .player{},
       .goodSphereLocations{
-          {-5.f, -5.f}, {2.f, -3.f}, {-6.f, 4.f}, {7.f, 9.f}, {1.f, 0.f}},
+          {-5.f, -5.f}, {2.f, -3.f}, {-6.f, 4.f}, {7.f, 9.f}, {5.f, 0.f}},
       .badSphereLocations{
           {-7.f, -3.f}, {3.f, 6.f}, {-5.f, 7.f}, {8.f, -1.f}, {2.f, -7.f}}};
 
   while (!glfwWindowShouldClose(window)) {
-    // TODO: input
+    data.player = updatePlayer(window, data.player);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     scene.render(viewAspectRatio(), data);
@@ -60,3 +63,11 @@ void framebufferSizeCallback(GLFWwindow *window, int width,
   glViewport(0, 0, width, height);
 }
 
+Player updatePlayer(GLFWwindow *window, const Player &player) {
+  Player newPlayer{player};
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    newPlayer = moveForward(player);
+  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    newPlayer = moveBackward(player);
+  return newPlayer;
+}
