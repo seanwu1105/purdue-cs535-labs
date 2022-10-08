@@ -19,8 +19,10 @@ const Player updatePlayer(GLFWwindow *window, const Player &player) noexcept;
 void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
 const bool outOfBulletRange(const Player &player,
                             const Bullet &bullet) noexcept;
-const std::vector<glm::vec2> updateGoodSpherePositionsAndPlayerSpeed(
-    const std::vector<glm::vec2> &goodSpherePositions, Player &player) noexcept;
+void onPlayerTouchGoodSphere(std::vector<glm::vec2> &goodSpherePositions,
+                             Player &player) noexcept;
+void onPlayerTouchBadSphere(const std::vector<glm::vec2> &badSpherePositions,
+                            Player &player) noexcept;
 
 struct WindowUserData {
   bool mouseButtonPressed{false};
@@ -76,8 +78,9 @@ int main() {
 
     if (outOfBulletRange(data.player, data.bullet)) data.bullet.visible = false;
 
-    data.goodSpherePositions = updateGoodSpherePositionsAndPlayerSpeed(
-        data.goodSpherePositions, data.player);
+    onPlayerTouchGoodSphere(data.goodSpherePositions, data.player);
+
+    onPlayerTouchBadSphere(data.badSpherePositions, data.player);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     scene.render(viewAspectRatio(), data);
@@ -120,9 +123,8 @@ const bool outOfBulletRange(const Player &player,
   return glm::distance(player.position, bullet.position) > 2.f;
 }
 
-const std::vector<glm::vec2> updateGoodSpherePositionsAndPlayerSpeed(
-    const std::vector<glm::vec2> &goodSpherePositions,
-    Player &player) noexcept {
+void onPlayerTouchGoodSphere(std::vector<glm::vec2> &goodSpherePositions,
+                             Player &player) noexcept {
   std::vector<glm::vec2> spherePositions{};
 
   for (const auto &position : goodSpherePositions) {
@@ -131,5 +133,13 @@ const std::vector<glm::vec2> updateGoodSpherePositionsAndPlayerSpeed(
     else spherePositions.push_back(position);
   }
 
-  return spherePositions;
+  goodSpherePositions = spherePositions;
+}
+
+void onPlayerTouchBadSphere(const std::vector<glm::vec2> &badSpherePositions,
+                            Player &player) noexcept {
+  for (const auto &position : badSpherePositions) {
+    if (glm::distance(player.position, position) <= 0.15f)
+      player.speed = std::max(player.speed - 0.00015f, 0.00010f);
+  }
 }
