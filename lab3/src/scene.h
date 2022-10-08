@@ -23,7 +23,6 @@ struct SceneData {
 class Scene {
 public:
   void render(const float &viewAspectRatio, const SceneData &data) const {
-    // const glm::mat4 view{glm::lookAt(glm::vec3{1, 2, 2}, {}, {0, 1, 0})};
     const glm::mat4 view{glm::lookAt(
         glm::vec3{data.player.position.x, 0.1, data.player.position.y},
         glm::vec3{data.player.position.x +
@@ -59,6 +58,7 @@ private:
                          const SceneData &data) const {
     if (data.goodSpherePositions != prevData.goodSpherePositions) {
       prevData.goodSpherePositions = data.goodSpherePositions;
+      goodSpheres.clear();
       for (const auto &_ : data.goodSpherePositions) {
         const glm::vec4 color{0.f, 0.45, 0.2, 1.0};
         goodSpheres.push_back(SphereComponent{.1f, color});
@@ -74,6 +74,7 @@ private:
                         const SceneData &data) const {
     if (data.badSpherePositions != prevData.badSpherePositions) {
       prevData.badSpherePositions = data.badSpherePositions;
+      badSpheres.clear();
       for (const auto &_ : data.badSpherePositions) {
         const glm::vec4 color{0.45, 0.f, 0.2, 1.0};
         badSpheres.push_back(SphereComponent{.1f, color});

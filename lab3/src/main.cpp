@@ -19,6 +19,9 @@ const Player updatePlayer(GLFWwindow *window, const Player &player) noexcept;
 void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
 const bool outOfBulletRange(const Player &player,
                             const Bullet &bullet) noexcept;
+const std::vector<glm::vec2>
+updateGoodSpherePositions(const std::vector<glm::vec2> &goodSpherePositions,
+                          const glm::vec2 &playerPosition) noexcept;
 
 struct WindowUserData {
   bool mouseButtonPressed{false};
@@ -73,6 +76,9 @@ int main() {
 
     if (outOfBulletRange(data.player, data.bullet)) data.bullet.visible = false;
 
+    data.goodSpherePositions = updateGoodSpherePositions(
+        data.goodSpherePositions, data.player.position);
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     scene.render(viewAspectRatio(), data);
 
@@ -112,4 +118,17 @@ void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods) {
 const bool outOfBulletRange(const Player &player,
                             const Bullet &bullet) noexcept {
   return glm::distance(player.position, bullet.position) > 2.f;
+}
+
+const std::vector<glm::vec2>
+updateGoodSpherePositions(const std::vector<glm::vec2> &goodSpherePositions,
+                          const glm::vec2 &playerPosition) noexcept {
+  std::vector<glm::vec2> spherePositions{};
+
+  for (const auto &position : goodSpherePositions) {
+    if (glm::distance(playerPosition, position) > 0.15f)
+      spherePositions.push_back(position);
+  }
+
+  return spherePositions;
 }
