@@ -34,8 +34,15 @@ struct WindowUserData {
 int main() {
   const RaiiGlfw raiiGlfw{};
 
-  GLFWwindow *window = glfwCreateWindow(800, 600, "Lab 3", NULL, NULL);
-  if (window == NULL) {
+  const GLFWvidmode *mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+  glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+  glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+  glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+  glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+  glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
+  GLFWwindow *window = glfwCreateWindow(mode->width, mode->height, "Lab 3",
+                                        glfwGetPrimaryMonitor(), nullptr);
+  if (window == nullptr) {
     std::cout << "Failed to create GLFW window" << std::endl;
     return -1;
   }
