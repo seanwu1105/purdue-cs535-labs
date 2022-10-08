@@ -13,6 +13,13 @@ const std::vector<glm::vec3>
 _subdivideTriangle(const std::array<glm::vec3, 3> &triangle,
                    const size_t &step);
 
+struct SphereData {
+  glm::vec2 position{};
+  float scale{.1f};
+  glm::vec4 color{};
+  bool hit{false};
+};
+
 class SphereVaoProvider {
 public:
   const std::vector<glm::vec3> vertices{_tessellateIcosahedron(3)};
@@ -42,21 +49,18 @@ private:
 
 class SphereComponent {
 public:
-  SphereComponent(const float &scale, const glm::vec4 &color)
-      : color(color), scale(scale) {}
-
   void render(const glm::mat4 &view, const glm::mat4 &proj,
-              const glm::vec2 &location) const {
+              const SphereData &data) const {
     glBindVertexArray(vaoProvider.vao());
     glUseProgram(shaderProgramProvider.program());
     setUniformToProgram(shaderProgramProvider.program(), "view", view);
     setUniformToProgram(shaderProgramProvider.program(), "proj", proj);
 
-    setUniformToProgram(shaderProgramProvider.program(), "color", color);
+    setUniformToProgram(shaderProgramProvider.program(), "color", data.color);
 
     glm::mat4 model(1.f);
-    model = glm::translate(model, {location.x, .1f, location.y});
-    model = glm::scale(model, glm::vec3(scale));
+    model = glm::translate(model, {data.position.x, .1f, data.position.y});
+    model = glm::scale(model, glm::vec3(data.scale));
 
     setUniformToProgram(shaderProgramProvider.program(), "model", model);
 
@@ -67,8 +71,6 @@ public:
 private:
   static inline const DefaultShaderProgramProvider shaderProgramProvider{};
   static inline const SphereVaoProvider vaoProvider{};
-  const float scale{.1f};
-  const glm::vec4 color{};
 };
 
 const std::vector<glm::vec3>
@@ -126,4 +128,9 @@ _subdivideTriangle(const std::array<glm::vec3, 3> &triangle,
   vertices.insert(vertices.end(), v4.begin(), v4.end());
 
   return vertices;
+}
+
+SphereData shrink(const SphereData &sphereData) {
+  return {sphereData.position, std::max(0.f, sphereData.scale - .0001f),
+          sphereData.color, sphereData.hit};
 }

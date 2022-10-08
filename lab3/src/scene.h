@@ -16,8 +16,8 @@
 struct SceneData {
   Player player{};
   Bullet bullet{};
-  std::vector<glm::vec2> goodSpherePositions{};
-  std::vector<glm::vec2> badSpherePositions{};
+  std::vector<SphereData> goodSpheres{};
+  std::vector<SphereData> badSpheres{};
 };
 
 class Scene {
@@ -41,7 +41,10 @@ public:
     renderGoodSpheres(view, proj, data);
     renderBadSpheres(view, proj, data);
     if (data.bullet.visible)
-      bulletSphere.render(view, proj, data.bullet.position);
+      bulletSphere.render(view, proj,
+                          {.position{data.bullet.position},
+                           .scale{0.01f},
+                           .color{glm::vec4(0.6f)}});
   }
 
 private:
@@ -52,36 +55,33 @@ private:
   const FloorComponent floorComponent{};
   mutable std::vector<SphereComponent> goodSpheres{};
   mutable std::vector<SphereComponent> badSpheres{};
-  const SphereComponent bulletSphere{.01f, glm::vec4(0.6f)};
+  const SphereComponent bulletSphere{};
 
   void renderGoodSpheres(const glm::mat4 &view, const glm::mat4 &proj,
                          const SceneData &data) const {
-    if (data.goodSpherePositions != prevData.goodSpherePositions) {
-      prevData.goodSpherePositions = data.goodSpherePositions;
+    if (data.goodSpheres.size() != prevData.goodSpheres.size()) {
+      prevData.goodSpheres = data.goodSpheres;
       goodSpheres.clear();
-      for (const auto &_ : data.goodSpherePositions) {
-        const glm::vec4 color{0.f, 0.45, 0.2, 1.0};
-        goodSpheres.push_back(SphereComponent{.1f, color});
-      }
+      for (const auto &_ : data.goodSpheres)
+        goodSpheres.push_back(SphereComponent{});
     }
+
     for (size_t i = 0; const auto &sphere : goodSpheres) {
-      sphere.render(view, proj, data.goodSpherePositions.at(i));
+      sphere.render(view, proj, data.goodSpheres.at(i));
       ++i;
     }
   }
 
   void renderBadSpheres(const glm::mat4 &view, const glm::mat4 &proj,
                         const SceneData &data) const {
-    if (data.badSpherePositions != prevData.badSpherePositions) {
-      prevData.badSpherePositions = data.badSpherePositions;
+    if (data.badSpheres.size() != prevData.badSpheres.size()) {
+      prevData.badSpheres = data.badSpheres;
       badSpheres.clear();
-      for (const auto &_ : data.badSpherePositions) {
-        const glm::vec4 color{0.45, 0.f, 0.2, 1.0};
-        badSpheres.push_back(SphereComponent{.1f, color});
-      }
+      for (const auto &_ : data.badSpheres)
+        badSpheres.push_back(SphereComponent{});
     }
     for (size_t i = 0; const auto &sphere : badSpheres) {
-      sphere.render(view, proj, data.badSpherePositions.at(i));
+      sphere.render(view, proj, data.badSpheres.at(i));
       ++i;
     }
   }
