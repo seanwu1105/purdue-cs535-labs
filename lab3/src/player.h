@@ -18,6 +18,8 @@ const Player moveForward(const Player &player) {
       player.position + glm::vec2{std::cos(glm::radians(player.angleDeg)),
                                   std::sin(glm::radians(player.angleDeg))} *
                             player.speed;
+  if (std::abs(newPlayer.position.x) > 1 || std::abs(newPlayer.position.y) > 1)
+    return player;
   return newPlayer;
 }
 
@@ -27,6 +29,8 @@ const Player moveBackward(const Player &player) {
       player.position - glm::vec2{std::cos(glm::radians(player.angleDeg)),
                                   std::sin(glm::radians(player.angleDeg))} *
                             player.speed;
+  if (std::abs(newPlayer.position.x) > 1 || std::abs(newPlayer.position.y) > 1)
+    return player;
   return newPlayer;
 }
 
