@@ -59,3 +59,4 @@ void framebufferSizeCallback(GLFWwindow *window, int width,
                              int height) noexcept {
   glViewport(0, 0, width, height);
 }
+

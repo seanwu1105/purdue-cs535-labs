@@ -12,7 +12,7 @@
 
 class AxesVaoProvider {
 public:
-  GLuint vao() const {
+  const GLuint &vao() const {
     if (glIsVertexArray(_vao) == GL_TRUE) return _vao;
 
     glGenVertexArrays(1, &_vao);

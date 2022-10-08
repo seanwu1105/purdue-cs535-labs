@@ -16,7 +16,7 @@ void _checkShaderLink(const auto shaderProgram);
 
 class DefaultShaderProgramProvider {
 public:
-  GLuint program() const {
+  const GLuint &program() const {
     if (glIsProgram(_program) == GL_TRUE) return _program;
 
     _program = buildShaderProgram({{"default.vert", GL_VERTEX_SHADER},
