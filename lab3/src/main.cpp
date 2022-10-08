@@ -19,9 +19,8 @@ const Player updatePlayer(GLFWwindow *window, const Player &player) noexcept;
 void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
 const bool outOfBulletRange(const Player &player,
                             const Bullet &bullet) noexcept;
-const std::vector<glm::vec2>
-updateGoodSpherePositions(const std::vector<glm::vec2> &goodSpherePositions,
-                          const glm::vec2 &playerPosition) noexcept;
+const std::vector<glm::vec2> updateGoodSpherePositionsAndPlayerSpeed(
+    const std::vector<glm::vec2> &goodSpherePositions, Player &player) noexcept;
 
 struct WindowUserData {
   bool mouseButtonPressed{false};
@@ -60,6 +59,7 @@ int main() {
           {-.7f, -.3f}, {.3f, .6f}, {-.5f, .7f}, {.8f, -.1f}, {.2f, -.7f}}};
 
   while (!glfwWindowShouldClose(window)) {
+    std::cout << data.player.speed << std::endl;
     data.player = updatePlayer(window, data.player);
 
     if (userData.mouseButtonPressed) {
@@ -76,8 +76,8 @@ int main() {
 
     if (outOfBulletRange(data.player, data.bullet)) data.bullet.visible = false;
 
-    data.goodSpherePositions = updateGoodSpherePositions(
-        data.goodSpherePositions, data.player.position);
+    data.goodSpherePositions = updateGoodSpherePositionsAndPlayerSpeed(
+        data.goodSpherePositions, data.player);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     scene.render(viewAspectRatio(), data);
@@ -120,14 +120,15 @@ const bool outOfBulletRange(const Player &player,
   return glm::distance(player.position, bullet.position) > 2.f;
 }
 
-const std::vector<glm::vec2>
-updateGoodSpherePositions(const std::vector<glm::vec2> &goodSpherePositions,
-                          const glm::vec2 &playerPosition) noexcept {
+const std::vector<glm::vec2> updateGoodSpherePositionsAndPlayerSpeed(
+    const std::vector<glm::vec2> &goodSpherePositions,
+    Player &player) noexcept {
   std::vector<glm::vec2> spherePositions{};
 
   for (const auto &position : goodSpherePositions) {
-    if (glm::distance(playerPosition, position) > 0.15f)
-      spherePositions.push_back(position);
+    if (glm::distance(player.position, position) <= 0.15f)
+      player.speed += 0.00015f;
+    else spherePositions.push_back(position);
   }
 
   return spherePositions;
