@@ -66,8 +66,12 @@ void framebufferSizeCallback(GLFWwindow *window, int width,
 Player updatePlayer(GLFWwindow *window, const Player &player) {
   Player newPlayer{player};
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    newPlayer = moveForward(player);
+    newPlayer = moveForward(newPlayer);
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    newPlayer = moveBackward(player);
+    newPlayer = moveBackward(newPlayer);
+  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    newPlayer = turnLeft(newPlayer);
+  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    newPlayer = turnRight(newPlayer);
   return newPlayer;
 }

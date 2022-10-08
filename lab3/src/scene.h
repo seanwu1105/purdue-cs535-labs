@@ -23,7 +23,9 @@ public:
   void render(const float &viewAspectRatio, const SceneData &data) const {
     const glm::mat4 view{glm::lookAt(
         glm::vec3{data.player.position.x, 0.1, data.player.position.y},
-        glm::vec3{1, 0.1, 0}, glm::vec3{0, 1, 0})};
+        glm::vec3{std::cos(glm::radians(data.player.angleDeg)), 0.1,
+                  std::sin(glm::radians(data.player.angleDeg))},
+        glm::vec3{0, 1, 0})};
 
     const glm::mat4 proj{
         glm::perspective(glm::radians(45.0f), viewAspectRatio, 0.1f, 100.0f)};

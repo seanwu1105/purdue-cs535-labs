@@ -13,19 +13,31 @@ struct Player {
 };
 
 Player moveForward(const Player &player) {
-  return Player{.position{player.position +
-                          glm::vec2{std::cos(glm::radians(player.angleDeg)),
-                                    std::sin(glm::radians(player.angleDeg))} *
-                              player.speed},
-                .angleDeg{player.angleDeg},
-                .speed{player.speed}};
+  Player newPlayer{player};
+  newPlayer.position =
+      player.position + glm::vec2{std::cos(glm::radians(player.angleDeg)),
+                                  std::sin(glm::radians(player.angleDeg))} *
+                            player.speed;
+  return newPlayer;
 }
 
 Player moveBackward(const Player &player) {
-  return Player{.position{player.position -
-                          glm::vec2{std::cos(glm::radians(player.angleDeg)),
-                                    std::sin(glm::radians(player.angleDeg))} *
-                              player.speed},
-                .angleDeg{player.angleDeg},
-                .speed{player.speed}};
+  Player newPlayer{player};
+  newPlayer.position =
+      player.position - glm::vec2{std::cos(glm::radians(player.angleDeg)),
+                                  std::sin(glm::radians(player.angleDeg))} *
+                            player.speed;
+  return newPlayer;
+}
+
+Player turnLeft(const Player &player) {
+  Player newPlayer{player};
+  newPlayer.angleDeg -= player.speed * 500;
+  return newPlayer;
+}
+
+Player turnRight(const Player &player) {
+  Player newPlayer{player};
+  newPlayer.angleDeg += player.speed * 500;
+  return newPlayer;
 }
