@@ -28,6 +28,7 @@ void onPlayerTouchBadSphere(const std::vector<SphereData> &spheres,
 void onBulletTouchSphere(std::vector<SphereData> &spheres,
                          Bullet &bullet) noexcept;
 void updateHitSpheres(std::vector<SphereData> &spheres) noexcept;
+void moveBadSpheres(std::vector<SphereData> &spheres) noexcept;
 
 struct WindowUserData {
   bool mouseButtonPressed{false};
@@ -68,7 +69,7 @@ int main() {
   const Scene scene{};
 
   const glm::vec4 goodColor{0.f, 0.45f, 0.2f, 1.f};
-  const glm::vec4 badColor{045.f, 0.f, 0.2f, 1.f};
+  const glm::vec4 badColor{0.45f, 0.f, 0.2f, 1.f};
   SceneData data{.goodSpheres{{
                      {.position{-.5f, -.5f}, .color{goodColor}},
                      {.position{.2f, -.3f}, .color{goodColor}},
@@ -111,6 +112,8 @@ int main() {
 
     updateHitSpheres(data.goodSpheres);
     updateHitSpheres(data.badSpheres);
+
+    moveBadSpheres(data.badSpheres);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     scene.render(viewAspectRatio(), data);
@@ -201,4 +204,11 @@ void updateHitSpheres(std::vector<SphereData> &spheres) noexcept {
   }
 
   spheres = newSpheres;
+}
+
+void moveBadSpheres(std::vector<SphereData> &spheres) noexcept {
+  for (auto &sphere : spheres) {
+    sphere.position.x += 0.00025f * std::cos(static_cast<float>(glfwGetTime()));
+    sphere.position.y += 0.00025f * std::sin(static_cast<float>(glfwGetTime()));
+  }
 }
