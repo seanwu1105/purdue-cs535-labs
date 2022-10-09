@@ -13,6 +13,8 @@
 #include "shader.h"
 #include "utils.h"
 
+void keyCallback(GLFWwindow *window, int key, int scancode, int action,
+                 int mods);
 void framebufferSizeCallback(GLFWwindow *window, int width,
                              int height) noexcept;
 const Player updatePlayer(GLFWwindow *window, const Player &player) noexcept;
@@ -56,6 +58,7 @@ int main() {
   WindowUserData userData{};
   glfwSetWindowUserPointer(window, &userData);
 
+  glfwSetKeyCallback(window, keyCallback);
   glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
   glfwSetMouseButtonCallback(window, mouseButtonCallback);
 
@@ -117,6 +120,12 @@ int main() {
   }
 
   return 0;
+}
+
+void keyCallback(GLFWwindow *window, int key, int scancode, int action,
+                 int mods) {
+  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
 void framebufferSizeCallback(GLFWwindow *window, int width,
